@@ -1,0 +1,91 @@
+{
+  "name": "pixelpillow/lunar-api-mollie-adapter",
+  "description": "This addon enables Mollie payments on your Lunar storefront when using the Lunar API package.",
+  "keywords": [
+    "pixelpillow",
+    "lunar-api",
+    "lunar",
+    "mollie",
+    "payments",
+    "lunar-api-mollie-adapter"
+  ],
+  "homepage": "https://github.com/pixelpillow/lunar-api-mollie-adapter",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Thomas van der Westen",
+      "email": "thomas@pixelpillow.nl",
+      "role": "Developer"
+    }
+  ],
+  "repositories": {
+    "lunar-api": {
+      "type": "path",
+      "url": "/Users/thomasvanderwesten/server/lunar-api"
+    }
+  },
+  "require": {
+    "php": "^8.1",
+    "dystcz/lunar-api": "^0.7",
+    "illuminate/contracts": "^10.0",
+    "laravel/pint": "^1.13",
+    "mollie/laravel-mollie": "^2.25"
+  },
+  "require-dev": {
+    "nunomaduro/collision": "^7.8",
+    "nunomaduro/larastan": "^2.0.1",
+    "orchestra/testbench": "^8.8",
+    "pestphp/pest": "^2.0",
+    "pestphp/pest-plugin-arch": "^2.0",
+    "pestphp/pest-plugin-laravel": "^2.0",
+    "phpstan/extension-installer": "^1.1",
+    "phpstan/phpstan-deprecation-rules": "^1.0",
+    "phpstan/phpstan-phpunit": "^1.0",
+    "laravel-json-api/testing": "^2.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pixelpillow\\LunarApiMollieAdapter\\": "src/",
+      "Pixelpillow\\LunarApiMollieAdapter\\Database\\Factories\\": "database/factories/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Pixelpillow\\LunarApiMollieAdapter\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": "@composer run prepare",
+    "clear": "@php vendor/bin/testbench package:purge-lunar-api-paypal-adapter --ansi",
+    "prepare": "@php vendor/bin/testbench package:discover --ansi",
+    "build": [
+      "@composer run prepare",
+      "@php vendor/bin/testbench workbench:build --ansi"
+    ],
+    "start": [
+      "Composer\\Config::disableProcessTimeout",
+      "@composer run build",
+      "@php vendor/bin/testbench serve"
+    ],
+    "analyse": "vendor/bin/phpstan analyse",
+    "test": "vendor/bin/pest",
+    "test-coverage": "vendor/bin/pest --coverage",
+    "format": "vendor/bin/pint"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "phpstan/extension-installer": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Pixelpillow\\LunarApiMollieAdapter\\LunarApiMollieAdapterServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

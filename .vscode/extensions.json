@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "robertgr991.php-parameter-hint",
+        "mehedidracula.php-namespace-resolver",
+        "bmewburn.vscode-intelephense-client",
+        "cvergne.vscode-php-getters-setters-cv",
+        "xdebug.php-debug",
+        "neilbrayfield.php-docblocker",
+        "valeryanm.vscode-phpsab"
+    ]
+}
