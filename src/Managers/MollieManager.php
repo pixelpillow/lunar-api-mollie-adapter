@@ -2,10 +2,12 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Managers;
 
-use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
+use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
 use Mollie\Api\Resources\Payment;
 use Mollie\Laravel\Facades\Mollie;
+use Pixelpillow\LunarApiMollieAdapter\Exceptions\InvalidConfigurationException;
+use Pixelpillow\LunarApiMollieAdapter\Generators\BaseUrlGenerator;
 
 class MollieManager
 {
@@ -17,7 +19,7 @@ class MollieManager
                 'value' => self::normalizeAmountToString($cart->total->value),
             ],
             'description' => 'Order #'.$cart->id,
-            'redirectUrl' => 'https://example.com/redirect',
+            'redirectUrl' => self::getRedirectUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
             'metadata' => [
                 'order_id' => $cart->id,
@@ -32,10 +34,38 @@ class MollieManager
         return Mollie::api()->payments->get($paymentId);
     }
 
+    /**
+     * Get the webhook URL
+     *
+     * @return string The webhook URL
+     */
     public static function getWebhookUrl(): string
     {
-        // return route('payments.webhook', ['paymentDriver' => 'mollie']);
-        return 'https://4544-95-98-164-198.ngrok-free.app/mollie/webhook';
+        return app('url')->route('payments.webhook', ['mollie']);
+    }
+
+    /**
+     * Get the redirect URL from the config
+     *
+     * @param  Cart  $cart The cart to get the webhook URL for.
+     * @return string The redirect URL
+     *
+     * @throws InvalidConfigurationException When the redirect URL is not set
+     */
+    public static function getRedirectUrl(Cart $cart): string
+    {
+        $redirectUrlGeneratorClass = Config::get('lunar-api.mollie.redirect_url_generator');
+
+        if (! $redirectUrlGeneratorClass && ! class_exists($redirectUrlGeneratorClass)) {
+            throw new InvalidConfigurationException('Mollie redirect URL generator not set in config');
+        }
+
+        /**
+         * @var BaseUrlGenerator $redirectUrlGenerator
+         */
+        $redirectUrlGenerator = new $redirectUrlGeneratorClass($cart);
+
+        return $redirectUrlGenerator->generate();
     }
 
     /**
@@ -61,47 +91,5 @@ class MollieManager
     public static function normalizeAmountToInteger(string $amount): int
     {
         return (int) str_replace('.', '', $amount);
-    }
-
-    /**
-     * Create a payment intent from a Cart
-     *
-     * @return PaymentIntent
-     */
-    public static function createIntent(Cart $cart)
-    {
-        $shipping = $cart->shippingAddress;
-
-        $meta = (array) $cart->meta;
-
-        if ($meta && ! empty($meta['payment_intent'])) {
-            $intent = $this->fetchIntent(
-                $meta['payment_intent']
-            );
-
-            if ($intent) {
-                return $intent;
-            }
-        }
-
-        $paymentIntent = $this->buildIntent(
-            $cart->total->value,
-            $cart->currency->code,
-            $shipping,
-        );
-
-        if (! $meta) {
-            $cart->update([
-                'meta' => [
-                    'payment_intent' => $paymentIntent->id,
-                ],
-            ]);
-        } else {
-            $meta['payment_intent'] = $paymentIntent->id;
-            $cart->meta = $meta;
-            $cart->save();
-        }
-
-        return $paymentIntent;
     }
 }

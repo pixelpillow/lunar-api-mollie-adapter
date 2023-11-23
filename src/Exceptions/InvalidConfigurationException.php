@@ -1,6 +1,6 @@
 <?php
 
-namespace Pixelpillow\LunarMollie\Exceptions;
+namespace Pixelpillow\LunarApiMollieAdapter\Exceptions;
 
 use Exception;
 

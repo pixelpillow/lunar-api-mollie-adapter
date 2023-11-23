@@ -20,6 +20,7 @@ use Orchestra\Testbench\TestCase as Orchestra;
 use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar\TestShippingModifier;
 use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar\TestTaxDriver;
 use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar\TestUrlGenerator;
+use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\TestRedirectGenerator;
 
 class TestCase extends Orchestra
 {
@@ -123,7 +124,8 @@ class TestCase extends Orchestra
         $app->useEnvironmentPath(__DIR__.'/..');
         $app->bootstrapWith([LoadEnvironmentVariables::class]);
 
-        Config::set('lunar-api.mollie.key', 'test_G3ys6guxc9Su7VJ2xctR4N4VqvGbQR');
+        Config::set('lunar-api.mollie.mollie_key', 'test_G3ys6guxc9Su7VJ2xctR4N4VqvGbQR');
+        Config::set('lunar-api.mollie.redirect_url_generator', TestRedirectGenerator::class);
 
         // Config::set('auth.providers.users', [
         //     'driver' => 'eloquent',
