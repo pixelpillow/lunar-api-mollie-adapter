@@ -3,6 +3,8 @@
 namespace Pixelpillow\LunarApiMollieAdapter;
 
 use Dystcz\LunarApi\Domain\Orders\Actions\FindOrderByIntent;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentAdapter;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
 use Illuminate\Http\JsonResponse;
@@ -136,15 +138,25 @@ class MolliePaymentAdapter extends PaymentAdapter
             return response()->json(['message' => 'success']);
         }
 
-        if ($payment->isExpired()) {
-            $order->update([
-                'status' => 'cancelled',
-            ]);
+        if ($payment->isCanceled()) {
+            OrderPaymentCanceled::dispatch($order, $this, $paymentIntent);
 
-            return response()->json(['message' => 'success']);
+            return response()->json(['message' => 'cancelled']);
         }
 
-        return response()->json(['message' => 'success']);
+        if ($payment->isFailed()) {
+            OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
+
+            return response()->json(['message' => 'failed']);
+        }
+
+        if ($payment->isExpired()) {
+            OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
+
+            return response()->json(['message' => 'expired']);
+        }
+
+        return response()->json(['message' => 'unknown event']);
     }
 
     /**

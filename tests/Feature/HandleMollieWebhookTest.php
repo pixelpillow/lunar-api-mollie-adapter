@@ -4,7 +4,6 @@ use Dystcz\LunarApi\Domain\Carts\Events\CartCreated;
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +40,7 @@ it('can handle succeeded event', function () {
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
     $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->paidAt = now()->toIso8601String();
     $mollieMockPayment->amount = [
         'value' => '10.00',
         'currency' => 'EUR',
@@ -118,38 +118,44 @@ it('can handle canceled event', function () {
     Event::assertDispatched(OrderPaymentCanceled::class);
 });
 
-// it('can handle payment_failed event', function () {
-//     /** @var TestCase $this */
-//     Event::fake(OrderPaymentFailed::class);
+it('can handle failed event', function () {
+    /** @var TestCase $this */
+    Event::fake(OrderPaymentFailed::class);
 
-//     $data = json_decode(file_get_contents(__DIR__.'/Stubs/Stripe/payment_intent.payment_failed.json'), true);
+    $mollieMockPayment = new Payment(app(MollieApiClient::class));
+    $mollieMockPayment->id = uniqid('tr_');
+    $mollieMockPayment->status = PaymentStatus::STATUS_FAILED;
+    $mollieMockPayment->amount = [
+        'value' => '10.00',
+        'currency' => 'EUR',
+    ];
 
-//     $data['data']['object']['id'] = $this->cart->meta['payment_intent'];
+    $mollieMockPayment->_links = [
+        'checkout' => [
+            'href' => 'https://www.mollie.com/checkout/test-mode?method=ideal&token=6.5gwscs',
+        ],
+    ];
 
-//     $response = $this
-//         ->post(
-//             '/stripe/webhook',
-//             $data,
-//             ['Stripe-Signature' => $this->determineStripeSignature($data)],
-//         );
+    Http::fake([
+        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
 
-//     $response->assertSuccessful();
+    $intent = App::make(MolliePaymentAdapter::class)->createIntent($this->cart, [
+        'payment_method_type' => 'ideal',
+        'payment_method_issuer' => 'ideal_ABNANL2A',
+    ]);
 
-//     Event::assertDispatched(OrderPaymentFailed::class);
-// });
+    $this->intent = $intent;
 
-// it('can handle any other event', function () {
-//     $events = Event::fake();
+    $response = $this
+        ->post(
+            '/mollie/webhook',
+            [
+                'id' => $this->intent->id,
+            ],
+        );
 
-//     /** @var TestCase $this */
-//     $data = json_decode(file_get_contents(__DIR__.'/Stubs/Stripe/charge.succeeded.json'), true);
+    $response->assertSuccessful();
 
-//     $response = $this
-//         ->post(
-//             '/stripe/webhook',
-//             $data,
-//             ['Stripe-Signature' => $this->determineStripeSignature($data)],
-//         );
-
-//     $response->assertSuccessful();
-// })->todo();
+    Event::assertDispatched(OrderPaymentCanceled::class);
+});

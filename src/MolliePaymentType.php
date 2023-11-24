@@ -71,6 +71,8 @@ class MolliePaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
+        ray($transaction->order->cart, $transaction, $amount);
+
         try {
             $payment = $this->mollie->createMolliePayment(
                 $transaction->order->cart,
@@ -154,7 +156,7 @@ class MolliePaymentType extends AbstractPayment
                 $this->molliePayment,
                 'capture',
                 [
-                    'parent_transaction_id' => null,
+                    'parent_transaction_id' => null, // @todo add parent mollie transaction id
                 ]
             );
         });

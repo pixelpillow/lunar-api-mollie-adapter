@@ -2,13 +2,18 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter;
 
+use Dystcz\LunarApi\Base\Facades\SchemaManifestFacade;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Facades\Payments;
+use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\JsonApi\V1\PaymentIssuerSchema;
+use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentMethods\JsonApi\V1\PaymentMethodSchema;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 
 class LunarApiMollieAdapterServiceProvider extends ServiceProvider
 {
+    protected $root = __DIR__.'/..';
+
     /**
      * Register the application services.
      */
@@ -16,6 +21,9 @@ class LunarApiMollieAdapterServiceProvider extends ServiceProvider
     {
         // Automatically apply the package configuration
         $this->mergeConfigFrom(__DIR__.'/../config/mollie.php', 'lunar-api.mollie');
+
+        // Register schemas.
+        $this->registerSchemas();
     }
 
     /**
@@ -23,7 +31,7 @@ class LunarApiMollieAdapterServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
+        // Register the MollieManager as a singleton.
         $this->app->singleton(
             'gc:mollie',
             fn (Application $app) => $app->make(MollieManager::class),
@@ -34,16 +42,31 @@ class LunarApiMollieAdapterServiceProvider extends ServiceProvider
             return $app->make(MolliePaymentType::class);
         });
 
+        // Register our payment adapter.
         MolliePaymentAdapter::register();
 
+        // Initialize the MollieManager.
         MolliePaymentAdapter::initMollieManager();
 
+        // Register the MollieServiceProvider.
         $this->app->register(\Mollie\Laravel\MollieServiceProvider::class);
 
+        // Publish the config file.
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/mollie.php' => config_path('lunar-api/mollie.php'),
             ], 'lunar-api.mollie.config');
         }
+
+        $this->loadRoutesFrom("{$this->root}/routes/api.php");
+    }
+
+    /**
+     * Register schemas.
+     */
+    public function registerSchemas(): void
+    {
+        SchemaManifestFacade::registerSchema(PaymentIssuerSchema::class);
+        SchemaManifestFacade::registerSchema(PaymentMethodSchema::class);
     }
 }

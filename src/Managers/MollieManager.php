@@ -4,6 +4,9 @@ namespace Pixelpillow\LunarApiMollieAdapter\Managers;
 
 use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
+use Mollie\Api\Exceptions\ApiException;
+use Mollie\Api\Resources\IssuerCollection;
+use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Resources\Payment;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\InvalidConfigurationException;
@@ -91,5 +94,47 @@ class MollieManager
     public static function normalizeAmountToInteger(string $amount): int
     {
         return (int) str_replace('.', '', $amount);
+    }
+
+    /**
+     * Get a list of Mollie payment issuers for iDEAL payments
+     *
+     * @return IssuerCollection The Mollie payment issuers.
+     *
+     * @see https://docs.mollie.com/reference/v2/methods-api/list-methods
+     */
+    public function getMolliePaymentIssuers(): ?IssuerCollection
+    {
+        try {
+            $reponse = Mollie::api()->methods->get(\Mollie\Api\Types\PaymentMethod::IDEAL, ['include' => 'issuers']);
+
+            return $reponse->issuers();
+        } catch (ApiException $e) {
+            report($e);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get a list of Mollie payment methods
+     *
+     * @param  array  $parameters The parameters to filter the payment methods on.
+     * @return \Mollie\Api\Resources\BaseCollection|\Mollie\Api\Resources\MethodCollection|null
+     *
+     * @see https://docs.mollie.com/reference/v2/methods-api/list-methods
+     */
+    public function getMolliePaymentMethods(
+        array $parameters = []
+    ): ?MethodCollection {
+        try {
+            $reponse = Mollie::api()->methods->allActive(empty($parameters) ? $parameters : null);
+
+            return $reponse;
+        } catch (ApiException $e) {
+            report($e);
+        }
+
+        return null;
     }
 }
