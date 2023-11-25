@@ -15,9 +15,11 @@ class AuthorizeMolliePayment
     {
         Log::info('Authorize mollie payment for order: '.$order->id);
 
+        $cart = $order->cart;
+
         /** @var PaymentAuthorize $payment */
         $payment = Payments::driver('mollie')
-            ->cart($order->cart)
+            ->cart($cart)
             ->withData([
                 'payment_intent' => $intent->id,
             ])

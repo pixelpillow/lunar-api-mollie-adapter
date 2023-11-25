@@ -36,6 +36,7 @@ jobs:
 
       - name: Install Composer dependencies
         run: |
+          composer config repositories.lunar-api vcs https://github.com/pixelpillow/lunar-api.git
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction --no-suggest
 
@@ -44,5 +45,5 @@ jobs:
           APP_ENV: testing
           DB_DATABASE: ":memory:"
           PAYMENT_DRIVER: mollie
-          MOLLIE_KEY: test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          MOLLIE_API_KEY: test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         run: vendor/bin/pest
