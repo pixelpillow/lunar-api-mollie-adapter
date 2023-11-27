@@ -4,6 +4,7 @@ use Dystcz\LunarApi\Domain\Carts\Events\CartCreated;
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -157,5 +158,5 @@ it('can handle failed event', function () {
 
     $response->assertSuccessful();
 
-    Event::assertDispatched(OrderPaymentCanceled::class);
+    Event::assertDispatched(OrderPaymentFailed::class);
 });

@@ -15,6 +15,7 @@ use Lunar\Models\Cart;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
+use Throwable;
 
 class MolliePaymentAdapter extends PaymentAdapter
 {
@@ -122,15 +123,16 @@ class MolliePaymentAdapter extends PaymentAdapter
             ]
         );
 
-        $order = App::make(FindOrderByIntent::class)(
-            $paymentIntent
-        );
-
-        if (! $order) {
-            report('Order not found for payment intent: '.$request->get('resource')['id']);
-
-            return response()->json(['error' => 'Order not found'], 404);
+        try {
+            $order = App::make(FindOrderByIntent::class)($paymentIntent);
+        } catch (Throwable $e) {
+            return new JsonResponse([
+                'webhook_successful' => false,
+                'message' => "Order not found for payment intent {$paymentIntent->id}",
+            ], 404);
         }
+
+        $this->setCart($order->cart);
 
         if ($payment->isPaid()) {
             App::make(AuthorizeMolliePayment::class)($order, $paymentIntent);
