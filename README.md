@@ -1,6 +1,7 @@
-# Description
 
-OG Image!
+![lunar-api-mollie-adapter](https://github.com/pixelpillow/lunar-api-mollie-adapter/assets/224501/f16d946c-5861-46df-a56d-06c972b7adc7)
+
+# Description
 
 This package is designed to seamlessly integrate Mollie payments into your [Lunar](https://lunarphp.io/) storefront. By leveraging the [Lunar API](https://github.com/dystcz/lunar-api), this adapter makes it easy to accept and manage payments through Mollie, a popular payment service provider.
 
