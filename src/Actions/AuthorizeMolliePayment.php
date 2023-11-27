@@ -5,7 +5,6 @@ namespace Pixelpillow\LunarApiMollieAdapter\Actions;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
 use Dystcz\LunarApi\Domain\Orders\Models\Order;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
-use Illuminate\Support\Facades\Log;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Facades\Payments;
 
@@ -13,8 +12,6 @@ class AuthorizeMolliePayment
 {
     public function __invoke(Order $order, PaymentIntent $intent): void
     {
-        Log::info('Authorize mollie payment for order: '.$order->id);
-
         /** @var PaymentAuthorize $payment */
         $payment = Payments::driver('mollie')
             ->cart($order->cart)

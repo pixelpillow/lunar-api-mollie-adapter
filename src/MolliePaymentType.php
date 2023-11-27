@@ -2,8 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter;
 
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Base\DataTransferObjects\PaymentCapture;
 use Lunar\Base\DataTransferObjects\PaymentRefund;
@@ -14,7 +13,6 @@ use Mollie\Api\Resources\Payment;
 use Mollie\Api\Types\PaymentStatus;
 use Mollie\Api\Types\RefundStatus;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
-use Pixelpillow\LunarMollie\Exceptions\InvalidRequestException;
 
 class MolliePaymentType extends AbstractPayment
 {
@@ -22,6 +20,10 @@ class MolliePaymentType extends AbstractPayment
      * The Mollie Payment
      */
     protected Payment $molliePayment;
+
+    public function __construct(protected MollieManager $mollie)
+    {
+    }
 
     /**
      * Authorize the payment for processing.
@@ -33,37 +35,71 @@ class MolliePaymentType extends AbstractPayment
                 $this->order = $this->cart->createOrder();
             }
         }
+        $this->molliePayment = $this->mollie->getPayment($this->data['payment_intent']);
+
+        $transaction = Transaction::where('reference', $this->data['payment_intent'])
+            ->where('order_id', $this->order->id)
+            ->where('driver', 'mollie')
+            ->first();
+
+        if (! $transaction || ! $this->molliePayment || ! $this->order) {
+            return new PaymentAuthorize(
+                success: false,
+                message: 'Transaction not found',
+                orderId: $this->order->id
+            );
+        }
+
+        foreach ($this->molliePayment->refunds() as $refund) {
+            $transaction = $this->order->refunds->where('reference', $refund->id)->first();
+
+            if ($transaction) {
+                $transaction->update([
+                    'status' => $refund->status,
+                ]);
+            }
+        }
 
         if ($this->order->placed_at) {
-            // Somethings gone wrong!
             return new PaymentAuthorize(
-                false,
-                'This order has already been placed',
-                $this->order->id
+                success: false,
+                message: 'This order has already been placed',
+                orderId: $this->order->id
             );
         }
 
-        $this->molliePayment = MollieManager::getPayment($this->data['payment_intent']);
-
-        if (! $this->isReadyToBeReleased()) {
-            return new PaymentAuthorize(
-                false,
-                'Payment not approved',
-            );
+        if (is_null($this->molliePayment->amountRefunded) || $this->molliePayment->amountRefunded->value === '0.00') {
+            $transaction->update([
+                'success' => $this->molliePayment->isPaid(),
+                'status' => $this->molliePayment->status,
+                'notes' => $this->molliePayment->description,
+                'card_type' => $this->molliePayment->method ?? '',
+                'meta' => [
+                    'method' => $this->molliePayment->method,
+                    'locale' => $this->molliePayment->locale,
+                    'details' => $this->molliePayment->details,
+                    'links' => $this->molliePayment->_links,
+                    'countryCode' => $this->molliePayment->countryCode,
+                ],
+            ]);
         }
 
-        return $this->releaseSuccess();
-    }
+        if ($this->molliePayment->status === PaymentStatus::STATUS_PAID) {
+            $this->order->placed_at = $this->molliePayment->paidAt;
+        }
 
-    /**
-     * Release the payment for processing.
-     */
-    protected function isReadyToBeReleased(): bool
-    {
-        return in_array($this->molliePayment->status, [
-            PaymentStatus::STATUS_PAID,
-            PaymentStatus::STATUS_AUTHORIZED,
-        ]);
+        $paymentStatus = $this->molliePayment->status;
+
+        $this->order->status = Config::get('lunar-api.mollie.payment_status_mappings.'.$paymentStatus) ?: $paymentStatus;
+
+        $this->order->save();
+
+        return new PaymentAuthorize(
+            success: $this->molliePayment->status === PaymentStatus::STATUS_PAID,
+            message: json_encode([
+                'status' => $this->molliePayment->status,
+            ]),
+        );
     }
 
     /**
@@ -71,38 +107,7 @@ class MolliePaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
-        ray($transaction->order->cart, $transaction, $amount);
-
-        try {
-            $payment = $this->mollie->createMolliePayment(
-                $transaction->order->cart,
-                $transaction,
-                $amount,
-            );
-        } catch (InvalidRequestException $e) {
-            report($e);
-
-            return new PaymentCapture(
-                success: false,
-                message: $e->getMessage()
-            );
-        }
-
-        $transaction->order->transactions()->create([
-            'parent_transaction_id' => $transaction->id,
-            'success' => ! in_array($payment->status, [
-                PaymentStatus::STATUS_FAILED,
-                PaymentStatus::STATUS_CANCELED,
-            ]),
-            'type' => 'capture',
-            'driver' => 'mollie',
-            'amount' => $amount,
-            'reference' => $payment->id,
-            'status' => 'succeeded',
-            'notes' => $payment->description,
-            'captured_at' => Carbon::parse($payment->paidAt),
-            'card_type' => 'ideal',
-        ]);
+        //Not applicable for Mollie
 
         return new PaymentCapture(success: true);
     }
@@ -114,10 +119,8 @@ class MolliePaymentType extends AbstractPayment
      */
     public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
-
         try {
-            $refund = $this->mollie->createMollieRefund($transaction->reference, $amount
-            );
+            $refund = $this->mollie->createRefund($transaction, $amount, $notes);
         } catch (ApiException $e) {
             return new PaymentRefund(
                 success: false,
@@ -133,52 +136,12 @@ class MolliePaymentType extends AbstractPayment
             'reference' => $refund->id,
             'status' => $refund->status,
             'notes' => $notes,
-            'card_type' => 'ideal',
-            'meta' => $refund->metadata,
+            'card_type' => $transaction->card_type,
         ]);
 
         return new PaymentRefund(
             success: true
         );
-    }
-
-    /**
-     * Return a successfully released payment.
-     */
-    private function releaseSuccess(): PaymentAuthorize
-    {
-        DB::transaction(function () {
-            $this->order->update([
-                'status' => $this->config['released'] ?? 'paid',
-                'placed_at' => now(),
-            ]);
-
-            $this->createTransaction(
-                $this->molliePayment,
-                'capture',
-            );
-        });
-
-        return new PaymentAuthorize(true, 'Payment approved', $this->order->id);
-    }
-
-    protected function createTransaction(
-        Payment $payment,
-        string $type,
-        array $data = []
-    ): void {
-        $this->order->transactions()->create([
-            'success' => $this->isSuccessful($payment),
-            'type' => $type,
-            'driver' => 'mollie',
-            'amount' => MollieManager::normalizeAmountToInteger($payment->amount->value),
-            'reference' => $payment->id,
-            'status' => $payment->status,
-            'notes' => $payment->description,
-            'captured_at' => $type === 'capture' ? Carbon::parse($payment->paidAt) : null,
-            'card_type' => $payment->metadata['payment_method_type'] ?? null,
-            ...$data,
-        ]);
     }
 
     /**

@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Lunar\Facades\CartSession;
+use Lunar\Models\Transaction;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
+use Mollie\Api\Types\PaymentMethod;
 use Mollie\Api\Types\PaymentStatus;
 use Pixelpillow\LunarApiMollieAdapter\MolliePaymentAdapter;
 use Pixelpillow\LunarApiMollieAdapter\Tests\TestCase;
@@ -41,6 +43,7 @@ it('can handle succeeded event', function () {
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
     $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
     $mollieMockPayment->paidAt = now()->toIso8601String();
     $mollieMockPayment->amount = [
         'value' => '10.00',
@@ -75,6 +78,17 @@ it('can handle succeeded event', function () {
     $response->assertSuccessful();
 
     Event::assertDispatched(OrderPaid::class);
+
+    $transaction = Transaction::where('order_id', $this->order->id)->first()->getRawOriginal();
+
+    $this->assertEquals($transaction['success'], true);
+
+    $this->assertEquals($transaction['status'], PaymentStatus::STATUS_PAID);
+
+    $this->assertEquals($transaction['card_type'], PaymentMethod::IDEAL);
+
+    $this->assertEquals($transaction['reference'], $mollieMockPayment->id);
+
 });
 
 it('can handle canceled event', function () {
@@ -84,6 +98,7 @@ it('can handle canceled event', function () {
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
     $mollieMockPayment->status = PaymentStatus::STATUS_CANCELED;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
     $mollieMockPayment->amount = [
         'value' => '10.00',
         'currency' => 'EUR',
@@ -126,6 +141,7 @@ it('can handle failed event', function () {
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
     $mollieMockPayment->status = PaymentStatus::STATUS_FAILED;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
     $mollieMockPayment->amount = [
         'value' => '10.00',
         'currency' => 'EUR',

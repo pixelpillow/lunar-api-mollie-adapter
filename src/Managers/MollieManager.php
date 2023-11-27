@@ -4,10 +4,12 @@ namespace Pixelpillow\LunarApiMollieAdapter\Managers;
 
 use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
+use Lunar\Models\Transaction;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Resources\IssuerCollection;
 use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Resources\Payment;
+use Mollie\Api\Resources\Refund;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\InvalidConfigurationException;
@@ -15,15 +17,25 @@ use Pixelpillow\LunarApiMollieAdapter\Generators\BaseUrlGenerator;
 
 class MollieManager
 {
-    public static function createPayment(Cart $cart, string $paymentMethod, string $issuer = null): Payment
+    /**
+     * Create a Mollie payment
+     *
+     * @param  Cart  $cart The cart to create the payment for.
+     * @param  string  $paymentMethod The payment method to use.
+     * @param  string|null  $issuer The issuer to use for iDEAL payments.
+     * @param  string|null  $description The description to use for the payment.
+     * @return Payment The Mollie payment
+     *
+     * @throws ApiException When the payment cannot be created
+     */
+    public function createPayment(Cart $cart, string $paymentMethod, string $issuer = null, string $description = null): Payment
     {
-
         $payment = [
             'amount' => [
-                'currency' => 'EUR',
+                'currency' => $cart->currency->code,
                 'value' => self::normalizeAmountToString($cart->total->value),
             ],
-            'description' => 'Order #'.$cart->id,
+            'description' => 'Payment for order '.$cart->id,
             'redirectUrl' => self::getRedirectUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
             'metadata' => [
@@ -39,7 +51,28 @@ class MollieManager
         return Mollie::api()->payments->create($payment);
     }
 
-    public static function getPayment(string $paymentId): Payment
+    public function createRefund(Transaction $transaction, int $amount, string $notes = null): Refund
+    {
+        $payment = [
+            'amount' => [
+                'currency' => $transaction->currency->code,
+                'value' => self::normalizeAmountToString($amount),
+            ],
+            'description' => $notes ?? 'Refund for order '.$transaction->order->reference,
+        ];
+
+        return Mollie::api()->payments->refund($transaction->reference, $payment);
+    }
+
+    /**
+     * Get a Mollie payment by ID
+     *
+     * @param  string  $paymentId The payment ID
+     * @return Payment The Mollie payment
+     *
+     * @throws ApiException When the payment is not found
+     */
+    public function getPayment(string $paymentId): Payment
     {
         return Mollie::api()->payments->get($paymentId);
     }

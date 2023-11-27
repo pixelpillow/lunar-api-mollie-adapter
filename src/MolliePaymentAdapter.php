@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Types\PaymentMethod;
+use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
@@ -24,6 +25,13 @@ class MolliePaymentAdapter extends PaymentAdapter
     protected Cart $cart;
 
     protected string $type = 'mollie';
+
+    protected MollieManager $mollie;
+
+    public function __construct()
+    {
+        $this->mollie = app(MollieManager::class);
+    }
 
     public function getDriver(): string
     {
@@ -62,7 +70,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         try {
-            $molliePayment = MollieManager::createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null);
+            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null);
         } catch (Throwable $e) {
             throw new ApiException('Mollie payment failed: '.$e->getMessage());
         }
@@ -134,7 +142,7 @@ class MolliePaymentAdapter extends PaymentAdapter
             return response()->json(['error' => 'Payment id is required'], 400);
         }
 
-        $payment = MollieManager::getPayment($paymentId);
+        $payment = $this->mollie->getPayment($paymentId);
 
         if (! $payment) {
             return response()->json(['error' => 'Payment not found'], 404);
