@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
+use Mollie\Api\Exceptions\ApiException;
+use Mollie\Api\Types\PaymentMethod;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
@@ -21,6 +23,8 @@ class MolliePaymentAdapter extends PaymentAdapter
 {
     protected Cart $cart;
 
+    protected string $type = 'mollie';
+
     public function getDriver(): string
     {
         return Config::get('lunar-api.mollie.driver', 'mollie');
@@ -28,7 +32,7 @@ class MolliePaymentAdapter extends PaymentAdapter
 
     public function getType(): string
     {
-        return Config::get('lunar-api.mollie.type', 'mollie');
+        return $this->type;
     }
 
     /**
@@ -39,14 +43,29 @@ class MolliePaymentAdapter extends PaymentAdapter
         $this->cart = $cart;
     }
 
+    /**
+     * Set type
+     */
+    protected function setType(string $type): void
+    {
+        $this->type = $type;
+    }
+
     public function createIntent(Cart $cart, array $meta = []): PaymentIntent
     {
         $this->setCart($cart);
 
         $paymentMethodType = $this->validatePaymentMethodType($meta['payment_method_type'] ?? null);
-        $paymentMethodIssuer = $this->validatePaymentIssuer($meta['payment_method_issuer'] ?? null);
 
-        $molliePayment = MollieManager::createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer);
+        if ($paymentMethodType === PaymentMethod::IDEAL) {
+            $paymentMethodIssuer = $this->validatePaymentIssuer($meta['payment_method_issuer'] ?? null);
+        }
+
+        try {
+            $molliePayment = MollieManager::createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null);
+        } catch (Throwable $e) {
+            throw new ApiException('Mollie payment failed: '.$e->getMessage());
+        }
 
         $paymentIntent = new PaymentIntent(
             id: $molliePayment->id,
@@ -57,12 +76,19 @@ class MolliePaymentAdapter extends PaymentAdapter
             ]
         );
 
+        $transactionMeta = [
+            'payment_method' => $paymentMethodType,
+            'mollie_checkout_url' => $molliePayment->getCheckoutUrl(),
+        ];
+
+        $this->setType($paymentMethodType);
+
+        if ($paymentMethodType === PaymentMethod::IDEAL) {
+            $transactionMeta['payment_method_issuer'] = $paymentMethodIssuer;
+        }
+
         $this->createTransaction($paymentIntent, [
-            'meta' => [
-                'payment_method' => $paymentMethodType,
-                'payment_method_issuer' => $paymentMethodIssuer,
-                'mollie_checkout_url' => $molliePayment->getCheckoutUrl(),
-            ],
+            'meta' => $transactionMeta,
         ]);
 
         return $paymentIntent;

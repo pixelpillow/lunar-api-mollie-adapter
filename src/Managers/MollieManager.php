@@ -8,15 +8,17 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Resources\IssuerCollection;
 use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Resources\Payment;
+use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\InvalidConfigurationException;
 use Pixelpillow\LunarApiMollieAdapter\Generators\BaseUrlGenerator;
 
 class MollieManager
 {
-    public static function createPayment(Cart $cart, string $paymentMethod, string $issuer): Payment
+    public static function createPayment(Cart $cart, string $paymentMethod, string $issuer = null): Payment
     {
-        return Mollie::api()->payments->create([
+
+        $payment = [
             'amount' => [
                 'currency' => 'EUR',
                 'value' => self::normalizeAmountToString($cart->total->value),
@@ -28,8 +30,13 @@ class MollieManager
                 'order_id' => $cart->id,
             ],
             'method' => $paymentMethod,
-            'issuer' => $issuer,
-        ]);
+        ];
+
+        if ($paymentMethod === PaymentMethod::IDEAL) {
+            $payment['issuer'] = $issuer;
+        }
+
+        return Mollie::api()->payments->create($payment);
     }
 
     public static function getPayment(string $paymentId): Payment
@@ -44,7 +51,18 @@ class MollieManager
      */
     public static function getWebhookUrl(): string
     {
-        return app('url')->route('payments.webhook', ['mollie']);
+        $webhookUrl = null;
+
+        // return a different webhook URL when testing
+        if (app()->environment('testing')) {
+            $webhookUrl = Config::get('lunar-api.mollie.webhook_url_testing', null);
+        }
+
+        if ($webhookUrl === null) {
+            $webhookUrl = app('url')->route('payments.webhook', ['mollie']);
+        }
+
+        return $webhookUrl;
     }
 
     /**

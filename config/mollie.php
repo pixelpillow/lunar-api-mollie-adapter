@@ -26,6 +26,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Testing Webhook URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used when running tests. It is used to test the webhook
+    | functionality.
+    |
+    */
+    'webhook_url_testing' => env('MOLLIE_WEBHOOK_URL_TESTING'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Lunar Api Domain Configuration
     |--------------------------------------------------------------------------
     |

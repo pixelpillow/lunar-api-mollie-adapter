@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\URL;
 use Lunar\Facades\CartSession;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
+use Mollie\Api\Types\PaymentMethod;
 use Mollie\Api\Types\PaymentStatus;
 use Pixelpillow\LunarApiMollieAdapter\Tests\TestCase;
 
@@ -30,7 +31,7 @@ beforeEach(function () {
     $this->cart = $cart;
 });
 
-test('a payment intent can be created', function (string $paymentMethod) {
+test('a ideal payment intent can be created', function () {
     /** @var TestCase $this */
     $url = URL::signedRoute(
         'v1.orders.createPaymentIntent',
@@ -44,6 +45,7 @@ test('a payment intent can be created', function (string $paymentMethod) {
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
     $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
     $mollieMockPayment->amount = [
         'value' => '10.00',
         'currency' => 'EUR',
@@ -66,9 +68,9 @@ test('a payment intent can be created', function (string $paymentMethod) {
             'type' => 'orders',
             'id' => (string) $this->order->getRouteKey(),
             'attributes' => [
-                'payment_method' => $paymentMethod,
+                'payment_method' => 'mollie',
                 'meta' => [
-                    'payment_method_type' => 'ideal',
+                    'payment_method_type' => PaymentMethod::IDEAL,
                     'payment_method_issuer' => 'ideal_ABNANL2A',
                 ],
             ],
@@ -77,6 +79,70 @@ test('a payment intent can be created', function (string $paymentMethod) {
 
     $response->assertSuccessful();
 
+    // Expect a checkout url to be returned
     expect($response->json('meta.payment_intent.meta.mollie_checkout_url'))->toBeString();
 
-})->with(['mollie']);
+    // Expect a transaction to be created
+    $this->assertDatabaseHas('lunar_transactions', [
+        'order_id' => $this->order->id,
+        'card_type' => PaymentMethod::IDEAL,
+    ]);
+
+});
+
+test('a Bankcontact payment intent can be created', function () {
+    /** @var TestCase $this */
+    $url = URL::signedRoute(
+        'v1.orders.createPaymentIntent',
+        [
+            'order' => $this->order->getRouteKey(),
+        ],
+    );
+
+    Event::fake(OrderPaid::class);
+
+    $mollieMockPayment = new Payment(app(MollieApiClient::class));
+    $mollieMockPayment->id = uniqid('tr_');
+    $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->method = PaymentMethod::BANCONTACT;
+    $mollieMockPayment->amount = [
+        'value' => '10.00',
+        'currency' => 'EUR',
+    ];
+
+    $mollieMockPayment->_links = [
+        'checkout' => [
+            'href' => 'https://www.mollie.com/checkout/test-mode?method=ideal&token=6.5gwscs',
+        ],
+    ];
+
+    Http::fake([
+        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
+
+    $response = $this
+        ->jsonApi()
+        ->expects('orders')
+        ->withData([
+            'type' => 'orders',
+            'id' => (string) $this->order->getRouteKey(),
+            'attributes' => [
+                'payment_method' => 'mollie',
+                'meta' => [
+                    'payment_method_type' => PaymentMethod::BANCONTACT,
+                ],
+            ],
+        ])
+        ->post($url);
+
+    $response->assertSuccessful();
+
+    // Expect a checkout url to be returned
+    expect($response->json('meta.payment_intent.meta.mollie_checkout_url'))->toBeString();
+
+    // Expect a transaction to be created
+    $this->assertDatabaseHas('lunar_transactions', [
+        'order_id' => $this->order->id,
+        'card_type' => PaymentMethod::BANCONTACT,
+    ]);
+});

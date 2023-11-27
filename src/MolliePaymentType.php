@@ -114,6 +114,7 @@ class MolliePaymentType extends AbstractPayment
      */
     public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
+
         try {
             $refund = $this->mollie->createMollieRefund($transaction->reference, $amount
             );
@@ -155,9 +156,6 @@ class MolliePaymentType extends AbstractPayment
             $this->createTransaction(
                 $this->molliePayment,
                 'capture',
-                [
-                    'parent_transaction_id' => null, // @todo add parent mollie transaction id
-                ]
             );
         });
 
@@ -172,13 +170,13 @@ class MolliePaymentType extends AbstractPayment
         $this->order->transactions()->create([
             'success' => $this->isSuccessful($payment),
             'type' => $type,
-            'driver' => 'molie',
+            'driver' => 'mollie',
             'amount' => MollieManager::normalizeAmountToInteger($payment->amount->value),
             'reference' => $payment->id,
             'status' => $payment->status,
             'notes' => $payment->description,
             'captured_at' => $type === 'capture' ? Carbon::parse($payment->paidAt) : null,
-            'card_type' => 'ideal',
+            'card_type' => $payment->metadata['payment_method_type'] ?? null,
             ...$data,
         ]);
     }
