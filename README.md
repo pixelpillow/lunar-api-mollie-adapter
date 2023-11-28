@@ -1,4 +1,3 @@
-
 ![lunar-api-mollie-adapter](https://github.com/pixelpillow/lunar-api-mollie-adapter/assets/224501/f16d946c-5861-46df-a56d-06c972b7adc7)
 
 # Description
@@ -11,7 +10,7 @@ Please follow the installation and configuration instructions in the Installatio
 
 ## Dependencies
 
-This package depends on these greate following packages:
+This package depends on the following packages:
 
 - [Lunar](https://lunarphp.io/)
 - [Lunar API](https://github.com/dystcz/lunar-api)

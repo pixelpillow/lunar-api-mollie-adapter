@@ -26,6 +26,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cancel URL after payment failure generator
+    |--------------------------------------------------------------------------
+    |
+    | This generator is used to generate the cancel URL after a failed payment.
+    | This generator is instantiated with the current Lunar Cart and
+    | Transaction.
+    |
+    */
+    'cancel_url_generator' => \Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnFailureUrlGenerator::class,
+
+    /*
+    |--------------------------------------------------------------------------
     | Testing Webhook URL
     |--------------------------------------------------------------------------
     |
@@ -44,7 +56,6 @@ return [
     | of your orders using the mapping below. Ideally, the values on the right
     | hand side should also be present in your lunar/orders.php config file.
     */
-
     'payment_status_mappings' => [
         'open' => 'payment-open',
         'canceled' => 'payment-canceled',
@@ -52,6 +63,7 @@ return [
         'expired' => 'payment-expired',
         'failed' => 'payment-failed',
         'paid' => 'payment-received',
+        'refunded' => 'payment-refunded',
     ],
 
     /*

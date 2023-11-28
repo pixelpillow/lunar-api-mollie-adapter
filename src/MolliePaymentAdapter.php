@@ -2,7 +2,6 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter;
 
-use Dystcz\LunarApi\Domain\Orders\Actions\FindOrderByIntent;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentAdapter;
@@ -16,6 +15,7 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
+use Pixelpillow\LunarApiMollieAdapter\Actions\FindOrderByIntent;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 use Throwable;
@@ -97,6 +97,7 @@ class MolliePaymentAdapter extends PaymentAdapter
 
         $this->createTransaction($paymentIntent, [
             'meta' => $transactionMeta,
+            'type' => 'capture',
         ]);
 
         return $paymentIntent;

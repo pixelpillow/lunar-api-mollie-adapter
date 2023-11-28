@@ -126,6 +126,7 @@ class TestCase extends Orchestra
 
         Config::set('lunar-api.mollie.mollie_key', 'test_G3ys6guxc9Su7VJ2xctR4N4VqvGbQR');
         Config::set('lunar-api.mollie.redirect_url_generator', TestRedirectGenerator::class);
+        Config::set('lunar-api.mollie.cancel_url_generator', TestRedirectGenerator::class);
 
         // Config::set('auth.providers.users', [
         //     'driver' => 'eloquent',

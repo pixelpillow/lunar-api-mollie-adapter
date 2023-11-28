@@ -37,6 +37,7 @@ class MollieManager
             ],
             'description' => 'Payment for order '.$cart->id,
             'redirectUrl' => self::getRedirectUrl($cart),
+            'cancelUrl' => self::getCancelUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
             'metadata' => [
                 'order_id' => $cart->id,
@@ -86,7 +87,7 @@ class MollieManager
     {
         $webhookUrl = null;
 
-        // return a different webhook URL when testing
+        // return a different webhook URL when Testing
         if (app()->environment('testing')) {
             $webhookUrl = Config::get('lunar-api.mollie.webhook_url_testing', null);
         }
@@ -120,6 +121,30 @@ class MollieManager
         $redirectUrlGenerator = new $redirectUrlGeneratorClass($cart);
 
         return $redirectUrlGenerator->generate();
+    }
+
+    /**
+     * Get the cancel URL from the config
+     *
+     * @param  Cart  $cart The cart to get the webhook URL for.
+     * @return string The cancel URL
+     *
+     * @throws InvalidConfigurationException When the cancel URL is not set
+     */
+    public static function getCancelUrl(Cart $cart): string
+    {
+        $cancelUrlGeneratorClass = Config::get('lunar-api.mollie.cancel_url_generator');
+
+        if (! $cancelUrlGeneratorClass && ! class_exists($cancelUrlGeneratorClass)) {
+            throw new InvalidConfigurationException('Mollie cancel URL generator not set in config');
+        }
+
+        /**
+         * @var BaseUrlGenerator $cancelUrlGenerator
+         */
+        $cancelUrlGenerator = new $cancelUrlGeneratorClass($cart);
+
+        return $cancelUrlGenerator->generate();
     }
 
     /**
