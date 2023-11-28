@@ -93,7 +93,11 @@ class MollieManager
         }
 
         if ($webhookUrl === null) {
-            $webhookUrl = app('url')->route('payments.webhook', ['mollie']);
+            $appUrl = Config::get('app.url', null);
+            $webhookRouteUrl = route('payments.webhook', ['mollie'], absolute: false);
+
+            // @TODO why is this needed? And why is url() not working?
+            $webhookUrl = $appUrl.$webhookRouteUrl;
         }
 
         return $webhookUrl;
