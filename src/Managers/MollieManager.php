@@ -20,15 +20,15 @@ class MollieManager
     /**
      * Create a Mollie payment
      *
-     * @param  Cart  $cart The cart to create the payment for.
-     * @param  string  $paymentMethod The payment method to use.
-     * @param  string|null  $issuer The issuer to use for iDEAL payments.
-     * @param  string|null  $description The description to use for the payment.
+     * @param  Cart  $cart  The cart to create the payment for.
+     * @param  string  $paymentMethod  The payment method to use.
+     * @param  string|null  $issuer  The issuer to use for iDEAL payments.
+     * @param  string|null  $description  The description to use for the payment.
      * @return Payment The Mollie payment
      *
      * @throws ApiException When the payment cannot be created
      */
-    public function createPayment(Cart $cart, string $paymentMethod, string $issuer = null, string $description = null): Payment
+    public function createPayment(Cart $cart, string $paymentMethod, ?string $issuer = null, ?string $description = null): Payment
     {
         $payment = [
             'amount' => [
@@ -52,7 +52,7 @@ class MollieManager
         return Mollie::api()->payments->create($payment);
     }
 
-    public function createRefund(Transaction $transaction, int $amount, string $notes = null): Refund
+    public function createRefund(Transaction $transaction, int $amount, ?string $notes = null): Refund
     {
         $payment = [
             'amount' => [
@@ -68,7 +68,7 @@ class MollieManager
     /**
      * Get a Mollie payment by ID
      *
-     * @param  string  $paymentId The payment ID
+     * @param  string  $paymentId  The payment ID
      * @return Payment The Mollie payment
      *
      * @throws ApiException When the payment is not found
@@ -106,7 +106,7 @@ class MollieManager
     /**
      * Get the redirect URL from the config
      *
-     * @param  Cart  $cart The cart to get the webhook URL for.
+     * @param  Cart  $cart  The cart to get the webhook URL for.
      * @return string The redirect URL
      *
      * @throws InvalidConfigurationException When the redirect URL is not set
@@ -130,7 +130,7 @@ class MollieManager
     /**
      * Get the cancel URL from the config
      *
-     * @param  Cart  $cart The cart to get the webhook URL for.
+     * @param  Cart  $cart  The cart to get the webhook URL for.
      * @return string The cancel URL
      *
      * @throws InvalidConfigurationException When the cancel URL is not set
@@ -158,7 +158,7 @@ class MollieManager
      *
      * @see https://docs.mollie.com/reference/v2/payments-api/create-payment
      *
-     * @param  int  $amount The amount in cents
+     * @param  int  $amount  The amount in cents
      */
     public static function normalizeAmountToString(int $amount): string
     {
@@ -199,7 +199,7 @@ class MollieManager
     /**
      * Get a list of Mollie payment methods
      *
-     * @param  array  $parameters The parameters to filter the payment methods on.
+     * @param  array  $parameters  The parameters to filter the payment methods on.
      * @return \Mollie\Api\Resources\BaseCollection|\Mollie\Api\Resources\MethodCollection|null
      *
      * @see https://docs.mollie.com/reference/v2/methods-api/list-methods

@@ -147,7 +147,7 @@ class MolliePaymentType extends AbstractPayment
     /**
      * Check if is successful.
      *
-     * @param  Payment  $payment The Mollie payment
+     * @param  Payment  $payment  The Mollie payment
      */
     public function isSuccessful(Payment $payment): bool
     {

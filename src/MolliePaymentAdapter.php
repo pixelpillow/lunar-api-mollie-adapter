@@ -106,7 +106,7 @@ class MolliePaymentAdapter extends PaymentAdapter
     /**
      * Validate the payment methose type against the Mollie payment method types
      *
-     * @param  string|null  $paymentMethodType The payment method type eg. ideal
+     * @param  string|null  $paymentMethodType  The payment method type eg. ideal
      */
     public function validatePaymentMethodType(?string $paymentMethodType): string
     {
@@ -124,7 +124,7 @@ class MolliePaymentAdapter extends PaymentAdapter
     /**
      * Validate the payment issuer against the Mollie payment issuers
      *
-     * @param  string|null  $paymentIssuer The payment issuer eg. ideal_ABNANL2A
+     * @param  string|null  $paymentIssuer  The payment issuer eg. ideal_ABNANL2A
      */
     public function validatePaymentIssuer(?string $paymentIssuer): ?string
     {
