@@ -1,5 +1,12 @@
 ![lunar-api-mollie-adapter](https://github.com/pixelpillow/lunar-api-mollie-adapter/assets/224501/f16d946c-5861-46df-a56d-06c972b7adc7)
 
+# Table of Contents
+
+- [Description](#description)
+- [Dependencies](#dependencies)
+- [Features](#features)
+- [Installation](#installation)
+
 # Description
 
 This package is designed to seamlessly integrate Mollie payments into your [Lunar](https://lunarphp.io/) storefront. By leveraging the [Lunar API](https://github.com/dystcz/lunar-api), this adapter makes it easy to accept and manage payments through Mollie, a popular payment service provider.
@@ -147,6 +154,49 @@ class CustomRedirectOnFailureUrlGenerator extends RedirectOnSuccessUrlGenerator
 }
 ```
 
+### Example JSON:API request for creating a Mollie IDEAL paymentIntent
+
+The create-payment-intent url is a signed url can be found in the response of the POST /api/v1/carts/{cart}/-actions/checkout request.
+
+```json
+POST api/v1/orders/{order}/-actions/create-payment-intent
+
+{
+  "data": {
+    "type": "orders",
+    "id": {order_id}},
+    "attributes": {
+      "payment_method": "mollie",
+      "meta": {
+        "payment_method_type": "ideal",
+        "payment_method_issuer": "ideal_ABNANL2A"
+      }
+    }
+  }
+}
+```
+
+### Example JSON:API request for creating a Mollie Bancontact paymentIntent
+
+The create-payment-intent url is a signed url can be found in the response of the POST /api/v1/carts/{cart}/-actions/checkout request.
+
+```json
+POST api/v1/orders/{order}/-actions/create-payment-intent
+
+{
+  "data": {
+    "type": "orders",
+    "id": {order_id}},
+    "attributes": {
+      "payment_method": "mollie",
+      "meta": {
+        "payment_method_type": "bancontact",
+      }
+    }
+  }
+}
+```
+
 ## Endpoints
 
 This package extends the Lunar API with the following endpoints:
@@ -220,7 +270,7 @@ Example response:
 
 If you discover any security related issues, please email security[at]pixelpillow.nl instead of using the issue tracker.
 
-## Credits
+## Acknowledgements
 
 - [All Contributors](../../contributors)
 - [Lunar](https://github.com/lunarphp/lunar) for providing awesome e-commerce package.
