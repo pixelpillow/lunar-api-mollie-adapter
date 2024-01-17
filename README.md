@@ -164,7 +164,7 @@ The create-payment-intent url is a signed url can be found in the response of th
 {
   "data": {
     "type": "orders",
-    "id": {order_id}},
+    "id": 1,
     "attributes": {
       "payment_method": "mollie",
       "meta": {
@@ -186,11 +186,11 @@ The create-payment-intent url is a signed url can be found in the response of th
 {
   "data": {
     "type": "orders",
-    "id": {order_id}},
+    "id": 1,
     "attributes": {
       "payment_method": "mollie",
       "meta": {
-        "payment_method_type": "bancontact",
+        "payment_method_type": "bancontact"
       }
     }
   }
