@@ -158,9 +158,9 @@ class CustomRedirectOnFailureUrlGenerator extends RedirectOnSuccessUrlGenerator
 
 The create-payment-intent url is a signed url can be found in the response of the POST /api/v1/carts/{cart}/-actions/checkout request.
 
-```json
-POST api/v1/orders/{order}/-actions/create-payment-intent
+`POST api/v1/orders/{order}/-actions/create-payment-intent`
 
+```json
 {
   "data": {
     "type": "orders",
@@ -180,9 +180,9 @@ POST api/v1/orders/{order}/-actions/create-payment-intent
 
 The create-payment-intent url is a signed url can be found in the response of the POST /api/v1/carts/{cart}/-actions/checkout request.
 
-```json
-POST api/v1/orders/{order}/-actions/create-payment-intent
+`POST api/v1/orders/{order}/-actions/create-payment-intent`
 
+```json
 {
   "data": {
     "type": "orders",
