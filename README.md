@@ -70,8 +70,6 @@ return [
 namespace App\Mollie\Generators;
 
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\URL;
 use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
 
 class CustomRedirectOnSuccessUrlGenerator extends RedirectOnSuccessUrlGenerator
@@ -111,8 +109,6 @@ class CustomRedirectOnSuccessUrlGenerator extends RedirectOnSuccessUrlGenerator
 namespace App\Mollie\Generators;
 
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\URL;
 use Lunar\Models\Order;
 use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
 
