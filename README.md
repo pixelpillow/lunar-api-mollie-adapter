@@ -62,6 +62,95 @@ return [
 ];
 ```
 
+5. Manage the redirect on success in your own `RedirectOnSuccessUrlGenerator` by defining your own generator in the `config/lunar-api-mollie-adapter.php` file:
+
+```php
+<?php
+
+namespace App\Mollie\Generators;
+
+use Dystcz\LunarApi\Domain\Carts\Models\Cart;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
+use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
+
+class CustomRedirectOnSuccessUrlGenerator extends RedirectOnSuccessUrlGenerator
+{
+    /**
+     * @var Cart
+     */
+    protected $cart;
+
+    public function __construct(Cart $cart)
+    {
+        $this->cart = $cart;
+    }
+
+    /**
+     * Generate the webhook URL.
+     */
+    public function generate(): string
+    {
+        $order = $this->cart->orders()->first();
+
+        if (! $order) {
+            throw new \Exception('Order not found');
+        }
+
+        // Return your own redirect URL here
+        return 'https://example.com/checkout/success?order_id=' . $order->id;
+    }
+}
+```
+
+6. Manage the redirect on failure in your the `RedirectOnFailureUrlGenerator` by defining your own generator in the `config/lunar-api-mollie-adapter.php` file:
+
+```php
+<?php
+
+namespace App\Mollie\Generators;
+
+use Dystcz\LunarApi\Domain\Carts\Models\Cart;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
+use Lunar\Models\Order;
+use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
+
+class CustomRedirectOnFailureUrlGenerator extends RedirectOnSuccessUrlGenerator
+{
+    /**
+     * @var Cart
+     */
+    protected $cart;
+
+    /**
+     * @var Order
+     */
+    protected $order;
+
+    public function __construct(Cart $cart)
+    {
+        $this->cart = $cart;
+    }
+
+    /**
+     * Generate the webhook URL.
+     */
+    public function generate(): string
+    {
+
+        $order = $this->cart->orders()->first();
+
+        if (! $order) {
+            throw new \Exception('Order not found');
+        }
+
+        // Return your own redirect URL here
+        return 'https://example.com/checkout/failure?order_id=' . $order->id;
+    }
+}
+```
+
 ## Endpoints
 
 This package extends the Lunar API with the following endpoints:
@@ -130,3 +219,19 @@ Example response:
   ]
 }
 ```
+
+### Security
+
+If you discover any security related issues, please email security[at]pixelpillow.nl instead of using the issue tracker.
+
+## Credits
+
+- [All Contributors](../../contributors)
+- [Lunar](https://github.com/lunarphp/lunar) for providing awesome e-commerce package.
+- [Dystcz](https://dy.st) for creating the Lunar API package.
+- [Laravel JSON:API](https://github.com/laravel-json-api/laravel) which is a brilliant JSON:API layer for Laravel applications
+- [Mollie](https://mollie.com) for providing a great payment service.
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
