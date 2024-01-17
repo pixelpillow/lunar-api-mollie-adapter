@@ -95,7 +95,7 @@ class MolliePaymentAdapter extends PaymentAdapter
             $transactionMeta['payment_method_issuer'] = $paymentMethodIssuer;
         }
 
-        $this->createTransaction($paymentIntent, [
+        $this->createTransaction($cart, $paymentIntent, [
             'meta' => $transactionMeta,
             'type' => 'capture',
         ]);
