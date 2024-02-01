@@ -7,10 +7,11 @@ use Dystcz\LunarApi\Domain\Orders\Models\Order;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Facades\Payments;
+use Lunar\Models\Transaction;
 
 class AuthorizeMolliePayment
 {
-    public function __invoke(Order $order, PaymentIntent $intent): void
+    public function __invoke(Order $order, PaymentIntent $intent, Transaction $transaction): void
     {
         /** @var PaymentAuthorize $payment */
         $payment = Payments::driver('mollie')
@@ -25,6 +26,10 @@ class AuthorizeMolliePayment
 
             return;
         }
+
+        $transaction->update([
+            'type' => 'capture',
+        ]);
 
         OrderPaid::dispatch($order);
     }

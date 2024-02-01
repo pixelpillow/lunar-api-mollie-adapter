@@ -20,7 +20,7 @@ class FindOrderByIntent extends ActionsFindOrderByIntent
             ->whereHas(
                 'transactions',
                 fn ($query) => $query
-                    ->where('type', 'capture')
+                    ->where('type', 'intent')
                     ->where('reference', $intent->id),
             )
             ->firstOrFail();

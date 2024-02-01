@@ -43,7 +43,7 @@ class MollieManager
                 'currency' => $cart->currency->code,
                 'value' => self::normalizeAmountToString($amount),
             ],
-            'description' => 'Payment for order '.$cart->id,
+            'description' => $description,
             'redirectUrl' => self::getRedirectUrl($cart),
             'cancelUrl' => self::getCancelUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
