@@ -59,7 +59,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         $this->type = $type;
     }
 
-    public function createIntent(Cart $cart, array $meta = []): PaymentIntent
+    public function createIntent(Cart $cart, array $meta = [], ?int $amount = null): PaymentIntent
     {
         $this->setCart($cart);
 
@@ -70,7 +70,8 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         try {
-            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null);
+            $amount = $amount ?? $cart->calculate();
+            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null, $amount);
         } catch (Throwable $e) {
             throw new ApiException('Mollie payment failed: '.$e->getMessage());
         }

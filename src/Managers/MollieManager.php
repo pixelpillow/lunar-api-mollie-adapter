@@ -24,16 +24,24 @@ class MollieManager
      * @param  string  $paymentMethod  The payment method to use.
      * @param  string|null  $issuer  The issuer to use for iDEAL payments.
      * @param  string|null  $description  The description to use for the payment.
+     * @param  int|null  $amount  A custom amount in cents to use for the payment.
      * @return Payment The Mollie payment
      *
      * @throws ApiException When the payment cannot be created
      */
-    public function createPayment(Cart $cart, string $paymentMethod, ?string $issuer = null, ?string $description = null): Payment
-    {
+    public function createPayment(
+        Cart $cart,
+        string $paymentMethod,
+        ?string $issuer = null,
+        ?string $description = null,
+        ?int $amount = null
+    ): Payment {
+        $amount = $amount ?? $cart->total->value;
+
         $payment = [
             'amount' => [
                 'currency' => $cart->currency->code,
-                'value' => self::normalizeAmountToString($cart->total->value),
+                'value' => self::normalizeAmountToString($amount),
             ],
             'description' => 'Payment for order '.$cart->id,
             'redirectUrl' => self::getRedirectUrl($cart),
