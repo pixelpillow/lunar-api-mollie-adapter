@@ -6,6 +6,7 @@ use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentAdapter;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
+use Dystcz\LunarApi\Domain\Transactions\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -15,7 +16,6 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
-use Pixelpillow\LunarApiMollieAdapter\Actions\FindOrderByIntent;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 use Throwable;
@@ -59,7 +59,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         $this->type = $type;
     }
 
-    public function createIntent(Cart $cart, array $meta = []): PaymentIntent
+    public function createIntent(Cart $cart, array $meta = [], ?int $amount = null): PaymentIntent
     {
         $this->setCart($cart);
 
@@ -70,7 +70,9 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         try {
-            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null);
+            $amount = $amount ?? null;
+            $description = "Lunar web payment for cart #{$cart->id}";
+            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null, $description, $amount);
         } catch (Throwable $e) {
             throw new ApiException('Mollie payment failed: '.$e->getMessage());
         }
@@ -97,7 +99,7 @@ class MolliePaymentAdapter extends PaymentAdapter
 
         $this->createTransaction($cart, $paymentIntent, [
             'meta' => $transactionMeta,
-            'type' => 'capture',
+            'type' => 'intent',
         ]);
 
         return $paymentIntent;
@@ -149,8 +151,19 @@ class MolliePaymentAdapter extends PaymentAdapter
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
+        $transaction = Transaction::where('reference', $payment->id)->first();
+
+        try {
+            $order = $transaction->order;
+        } catch (Throwable $e) {
+            return new JsonResponse([
+                'webhook_successful' => false,
+                'message' => "Order not found for transaction #{$transaction->id}",
+            ], 404);
+        }
+
         $paymentIntent = new PaymentIntent(
-            id: $payment->id,
+            id: $transaction->reference,
             status: $payment->status,
             amount: MollieManager::normalizeAmountToInteger($payment->amount->value),
             meta: [
@@ -158,19 +171,12 @@ class MolliePaymentAdapter extends PaymentAdapter
             ]
         );
 
-        try {
-            $order = App::make(FindOrderByIntent::class)($paymentIntent);
-        } catch (Throwable $e) {
-            return new JsonResponse([
-                'webhook_successful' => false,
-                'message' => "Order not found for payment intent {$paymentIntent->id}",
-            ], 404);
-        }
-
         $this->setCart($order->cart);
 
-        if ($payment->isPaid()) {
-            App::make(AuthorizeMolliePayment::class)($order, $paymentIntent);
+        if ($payment->isPaid() && $transaction->status !== 'paid') {
+            App::make(AuthorizeMolliePayment::class)($order, $paymentIntent, $transaction);
+
+            $this->setTransactionStatus($transaction, 'paid');
 
             return response()->json(['message' => 'success']);
         }
@@ -178,11 +184,15 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isCanceled()) {
             OrderPaymentCanceled::dispatch($order, $this, $paymentIntent);
 
+            $this->setTransactionStatus($transaction, 'cancelled');
+
             return response()->json(['message' => 'cancelled']);
         }
 
         if ($payment->isFailed()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
+
+            $this->setTransactionStatus($transaction, 'failed');
 
             return response()->json(['message' => 'failed']);
         }
@@ -190,10 +200,19 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isExpired()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
 
+            $this->setTransactionStatus($transaction, 'expired');
+
             return response()->json(['message' => 'expired']);
         }
 
         return response()->json(['message' => 'unknown event']);
+    }
+
+    public function setTransactionStatus(Transaction $transaction, string $status)
+    {
+        $transaction->update([
+            'status' => $status,
+        ]);
     }
 
     /**

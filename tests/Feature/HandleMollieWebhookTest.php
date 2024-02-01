@@ -42,7 +42,7 @@ it('can handle succeeded event', function () {
 
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
-    $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->status = PaymentStatus::STATUS_OPEN;
     $mollieMockPayment->method = PaymentMethod::IDEAL;
     $mollieMockPayment->paidAt = now()->toIso8601String();
     $mollieMockPayment->amount = [
@@ -57,7 +57,7 @@ it('can handle succeeded event', function () {
     ];
 
     Http::fake([
-        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+        'https://api.mollie.com/v2/payments' => Http::response(json_encode($mollieMockPayment)),
     ]);
 
     $intent = App::make(MolliePaymentAdapter::class)->createIntent($this->cart, [
@@ -66,6 +66,12 @@ it('can handle succeeded event', function () {
     ]);
 
     $this->intent = $intent;
+
+    $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+
+    Http::fake([
+        'https://api.mollie.com/v2/payments/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
 
     $response = $this
         ->post(
@@ -111,7 +117,7 @@ it('can handle canceled event', function () {
     ];
 
     Http::fake([
-        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+        'https://api.mollie.com/v2/payments' => Http::response(json_encode($mollieMockPayment)),
     ]);
 
     $intent = App::make(MolliePaymentAdapter::class)->createIntent($this->cart, [
@@ -120,6 +126,12 @@ it('can handle canceled event', function () {
     ]);
 
     $this->intent = $intent;
+
+    $mollieMockPayment->status = PaymentStatus::STATUS_CANCELED;
+
+    Http::fake([
+        'https://api.mollie.com/v2/payments/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
 
     $response = $this
         ->post(
@@ -154,7 +166,7 @@ it('can handle failed event', function () {
     ];
 
     Http::fake([
-        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+        'https://api.mollie.com/v2/payments' => Http::response(json_encode($mollieMockPayment)),
     ]);
 
     $intent = App::make(MolliePaymentAdapter::class)->createIntent($this->cart, [
@@ -163,6 +175,61 @@ it('can handle failed event', function () {
     ]);
 
     $this->intent = $intent;
+
+    $mollieMockPayment->status = PaymentStatus::STATUS_FAILED;
+
+    Http::fake([
+        'https://api.mollie.com/v2/payments/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
+
+    $response = $this
+        ->post(
+            '/mollie/webhook',
+            [
+                'id' => $this->intent->id,
+            ],
+        );
+
+    $response->assertSuccessful();
+
+    Event::assertDispatched(OrderPaymentFailed::class);
+});
+
+it('can handle expired event', function () {
+    /** @var TestCase $this */
+    Event::fake(OrderPaymentFailed::class);
+
+    $mollieMockPayment = new Payment(app(MollieApiClient::class));
+    $mollieMockPayment->id = uniqid('tr_');
+    $mollieMockPayment->status = PaymentStatus::STATUS_OPEN;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
+    $mollieMockPayment->amount = [
+        'value' => '10.00',
+        'currency' => 'EUR',
+    ];
+
+    $mollieMockPayment->_links = [
+        'checkout' => [
+            'href' => 'https://www.mollie.com/checkout/test-mode?method=ideal&token=6.5gwscs',
+        ],
+    ];
+
+    Http::fake([
+        'https://api.mollie.com/v2/payments' => Http::response(json_encode($mollieMockPayment)),
+    ]);
+
+    $intent = App::make(MolliePaymentAdapter::class)->createIntent($this->cart, [
+        'payment_method_type' => 'ideal',
+        'payment_method_issuer' => 'ideal_ABNANL2A',
+    ]);
+
+    $this->intent = $intent;
+
+    $mollieMockPayment->status = PaymentStatus::STATUS_EXPIRED;
+
+    Http::fake([
+        'https://api.mollie.com/v2/payments/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
 
     $response = $this
         ->post(
