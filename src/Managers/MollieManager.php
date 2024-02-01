@@ -47,9 +47,7 @@ class MollieManager
             'redirectUrl' => self::getRedirectUrl($cart),
             'cancelUrl' => self::getCancelUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
-            'metadata' => [
-                'order_id' => $cart->id,
-            ],
+            'metadata' => [],
             'method' => $paymentMethod,
         ];
 
