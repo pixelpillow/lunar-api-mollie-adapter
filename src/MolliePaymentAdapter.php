@@ -70,7 +70,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         try {
-            $amount = $amount ?? $cart->calculate();
+            $amount = $amount ?? null;
             $description = "Lunar web payment for cart #{$cart->id}";
             $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null, $description, $amount);
         } catch (Throwable $e) {
