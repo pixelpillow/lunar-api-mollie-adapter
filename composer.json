@@ -11,7 +11,7 @@
   ],
   "homepage": "https://github.com/pixelpillow/lunar-api-mollie-adapter",
   "license": "MIT",
-  "version": "0.1.2",
+  "version": "0.1.2.0",
   "authors": [
     {
       "name": "Thomas van der Westen",
