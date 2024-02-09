@@ -2,9 +2,9 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Actions;
 
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentSuccessful;
 use Dystcz\LunarApi\Domain\Orders\Models\Order;
-use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
+use Dystcz\LunarApi\Domain\Payments\Contracts\PaymentIntent;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Facades\Payments;
 use Lunar\Models\Transaction;
@@ -17,12 +17,12 @@ class AuthorizeMolliePayment
         $payment = Payments::driver('mollie')
             ->cart($order->cart)
             ->withData([
-                'payment_intent' => $intent->id,
+                'payment_intent' => $intent->getId(),
             ])
             ->authorize();
 
         if (! $payment->success) {
-            report('Payment failed for order: '.$order->id.' with reason: '.$payment->message);
+            report('Payment failed for order: '.$order->getRouteKey().' with reason: '.$payment->message);
 
             return;
         }
@@ -31,6 +31,6 @@ class AuthorizeMolliePayment
             'type' => 'capture',
         ]);
 
-        OrderPaid::dispatch($order);
+        OrderPaymentSuccessful::dispatch($order);
     }
 }
