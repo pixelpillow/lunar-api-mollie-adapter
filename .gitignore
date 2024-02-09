@@ -21,6 +21,7 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+.phpactor.json
 .DS_Store
 .idea/
 /.env.testing
