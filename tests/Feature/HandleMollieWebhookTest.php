@@ -2,9 +2,9 @@
 
 use Dystcz\LunarApi\Domain\Carts\Events\CartCreated;
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentSuccessful;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -38,7 +38,7 @@ beforeEach(function () {
 
 it('can handle succeeded event', function () {
     /** @var TestCase $this */
-    Event::fake(OrderPaid::class);
+    Event::fake(OrderPaymentSuccessful::class);
 
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
@@ -77,15 +77,15 @@ it('can handle succeeded event', function () {
         ->post(
             '/mollie/webhook',
             [
-                'id' => $this->intent->id,
+                'id' => $this->intent->getId(),
             ],
         );
 
     $response->assertSuccessful();
 
-    Event::assertDispatched(OrderPaid::class);
+    Event::assertDispatched(OrderPaymentSuccessful::class);
 
-    $transaction = Transaction::where('order_id', $this->order->id)->first()->getRawOriginal();
+    $transaction = Transaction::query()->where('order_id', $this->order->id)->first()->getRawOriginal();
 
     $this->assertEquals($transaction['success'], true);
 
@@ -137,7 +137,7 @@ it('can handle canceled event', function () {
         ->post(
             '/mollie/webhook',
             [
-                'id' => $this->intent->id,
+                'id' => $this->intent->getId(),
             ],
         );
 
@@ -186,7 +186,7 @@ it('can handle failed event', function () {
         ->post(
             '/mollie/webhook',
             [
-                'id' => $this->intent->id,
+                'id' => $this->intent->getId(),
             ],
         );
 
@@ -235,7 +235,7 @@ it('can handle expired event', function () {
         ->post(
             '/mollie/webhook',
             [
-                'id' => $this->intent->id,
+                'id' => $this->intent->getId(),
             ],
         );
 

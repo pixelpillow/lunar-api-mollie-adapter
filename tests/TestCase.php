@@ -2,11 +2,13 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Tests;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use LaravelJsonApi\Testing\MakesJsonApiRequests;
+use LaravelJsonApi\Testing\TestExceptionHandler;
 use Lunar\Base\ShippingModifiers;
 use Lunar\Facades\Taxes;
 use Lunar\Models\Cart;
@@ -51,9 +53,10 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        Taxes::extend('test', function ($app) {
-            return $app->make(TestTaxDriver::class);
-        });
+        Taxes::extend(
+            'test',
+            fn (Application $app) => $app->make(TestTaxDriver::class),
+        );
 
         Currency::factory()->create([
             'code' => 'EUR',
@@ -136,9 +139,6 @@ class TestCase extends Orchestra
         /**
          * Lunar configuration
          */
-        // Config::set('lunar-api.additional_servers', [
-        //     Server::class,
-        // ]);
         Config::set('lunar.urls.generator', TestUrlGenerator::class);
         Config::set('lunar.taxes.driver', 'test');
 
@@ -147,7 +147,6 @@ class TestCase extends Orchestra
          */
         Config::set('database.default', 'sqlite');
         Config::set('database.migrations', 'migrations');
-
         Config::set('database.connections.sqlite', [
             'driver' => 'sqlite',
             'database' => ':memory:',
@@ -172,5 +171,16 @@ class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
+    }
+
+    /**
+     * Resolve application HTTP exception handler implementation.
+     */
+    protected function resolveApplicationExceptionHandler($app): void
+    {
+        $app->singleton(
+            ExceptionHandler::class,
+            TestExceptionHandler::class
+        );
     }
 }

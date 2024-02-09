@@ -2,7 +2,7 @@
 
 use Dystcz\LunarApi\Domain\Carts\Events\CartCreated;
 use Dystcz\LunarApi\Domain\Carts\Models\Cart;
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaid;
+use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentSuccessful;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -41,7 +41,7 @@ test('a ideal payment intent can be created', function () {
         ],
     );
 
-    Event::fake(OrderPaid::class);
+    Event::fake(OrderPaymentSuccessful::class);
 
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
@@ -100,7 +100,7 @@ test('a Bankcontact payment intent can be created', function () {
         ],
     );
 
-    Event::fake(OrderPaid::class);
+    Event::fake(OrderPaymentSuccessful::class);
 
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
@@ -157,7 +157,7 @@ test('a payment with a custom amount can be created', function () {
         ],
     );
 
-    Event::fake(OrderPaid::class);
+    Event::fake(OrderPaymentSuccessful::class);
 
     $mollieMockPayment = new Payment(app(MollieApiClient::class));
     $mollieMockPayment->id = uniqid('tr_');
