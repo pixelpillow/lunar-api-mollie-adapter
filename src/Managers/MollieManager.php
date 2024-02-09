@@ -3,6 +3,7 @@
 namespace Pixelpillow\LunarApiMollieAdapter\Managers;
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Lunar\Models\Cart;
 use Lunar\Models\Transaction;
 use Mollie\Api\Exceptions\ApiException;
@@ -37,6 +38,19 @@ class MollieManager
         ?int $amount = null
     ): Payment {
         $amount = $amount ?? $cart->total->value;
+
+        $meta = (array) $cart->meta;
+
+        // Try to get payment if id is stored in meta
+        if ($meta['payment_intent'] ?? false) {
+            try {
+                $intent = $this->getPayment($meta['payment_intent']);
+
+                return $intent;
+            } catch (ApiException $e) {
+                Log::error("Mollie payment failed: {$e->getMessage()}");
+            }
+        }
 
         $payment = [
             'amount' => [
