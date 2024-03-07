@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Lunar\Facades\CartSession;
+use Lunar\Models\Currency;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Api\Types\PaymentStatus;
+use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 use Pixelpillow\LunarApiMollieAdapter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -178,7 +180,76 @@ test('a payment with a custom amount can be created', function () {
         'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
     ]);
 
-    $amount = 2000;
+    $currency = Currency::getDefault();
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', $currency->code);
+
+    $response = $this
+        ->jsonApi()
+        ->expects('orders')
+        ->withData([
+            'type' => 'orders',
+            'id' => (string) $this->order->getRouteKey(),
+            'attributes' => [
+                'payment_method' => 'mollie',
+                'amount' => $amount,
+                'meta' => [
+                    'payment_method_type' => PaymentMethod::IDEAL,
+                    'payment_method_issuer' => 'ideal_ABNANL2A',
+                ],
+            ],
+        ])
+        ->post($url);
+
+    $response->assertSuccessful();
+
+    // Expect a checkout url to be returned
+    expect($response->json('meta.payment_intent.meta.mollie_checkout_url'))->toBeString();
+
+    // Expect a transaction to be created
+    $this->assertDatabaseHas('lunar_transactions', [
+        'order_id' => $this->order->id,
+        'card_type' => PaymentMethod::IDEAL,
+        'amount' => $amount,
+    ]);
+});
+
+test('a payment with a currency with 4 decimals can be created', function () {
+    /** @var TestCase $this */
+    $url = URL::signedRoute(
+        'v1.orders.createPaymentIntent',
+        [
+            'order' => $this->order->getRouteKey(),
+        ],
+    );
+
+    Event::fake(OrderPaymentSuccessful::class);
+
+    $mollieMockPayment = new Payment(app(MollieApiClient::class));
+    $mollieMockPayment->id = uniqid('tr_');
+    $mollieMockPayment->status = PaymentStatus::STATUS_PAID;
+    $mollieMockPayment->method = PaymentMethod::IDEAL;
+    $mollieMockPayment->amount = [
+        'value' => '20.00',
+        'currency' => 'USD',
+    ];
+
+    $mollieMockPayment->_links = [
+        'checkout' => [
+            'href' => 'https://www.mollie.com/checkout/test-mode?method=ideal&token=6.5gwscs',
+        ],
+    ];
+
+    Http::fake([
+        'https://api.mollie.com/*' => Http::response(json_encode($mollieMockPayment)),
+    ]);
+
+    Currency::factory()->create([
+        'code' => 'USD',
+        'decimal_places' => 4,
+    ]);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', 'USD');
 
     $response = $this
         ->jsonApi()

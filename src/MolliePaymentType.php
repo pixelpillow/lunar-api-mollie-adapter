@@ -132,7 +132,7 @@ class MolliePaymentType extends AbstractPayment
             'success' => $refund->status !== RefundStatus::STATUS_FAILED,
             'type' => 'refund',
             'driver' => 'mollie',
-            'amount' => $this->mollie->normalizeAmountToInteger($refund->amount->value),
+            'amount' => $this->mollie->normalizeAmountToInteger($refund->amount->value, $refund->amount->currency),
             'reference' => $refund->id,
             'status' => $refund->status,
             'notes' => $notes,

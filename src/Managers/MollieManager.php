@@ -5,6 +5,7 @@ namespace Pixelpillow\LunarApiMollieAdapter\Managers;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Lunar\Models\Cart;
+use Lunar\Models\Currency;
 use Lunar\Models\Transaction;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Resources\IssuerCollection;
@@ -191,9 +192,22 @@ class MollieManager
      * eg. 1000 instead of 10.00
      * This is the opposite of normalizeAmountToString
      */
-    public static function normalizeAmountToInteger(string $amount): int
+    public static function normalizeAmountToInteger(string $amount, string $currency): int
     {
-        return (int) str_replace('.', '', $amount);
+
+        /** @var Currency */
+        $currency = Currency::where('code', $currency)->first();
+
+        if ($currency === null) {
+            throw new InvalidConfigurationException('Currency "'.$currency.'" not found');
+        }
+
+        $decimals = $currency->decimal_places;
+        $amount = str_replace('.', '', $amount);
+
+        $v = (int) $amount * (10 ** $decimals);
+
+        return $v;
     }
 
     /**
