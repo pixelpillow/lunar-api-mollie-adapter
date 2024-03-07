@@ -4,11 +4,12 @@ namespace Pixelpillow\LunarApiMollieAdapter;
 
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
 use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
+use Dystcz\LunarApi\Domain\Payments\Contracts\PaymentIntent as PaymentIntentContract;
 use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentAdapter;
-use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
 use Dystcz\LunarApi\Domain\Transactions\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Lunar\Models\Cart;
@@ -16,91 +17,91 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
+use Pixelpillow\LunarApiMollieAdapter\Domain\Payments\Data\PaymentIntent;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\MissingMetadataException;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 use Throwable;
 
 class MolliePaymentAdapter extends PaymentAdapter
 {
-    protected Cart $cart;
-
-    protected string $type = 'mollie';
+    protected string $type;
 
     protected MollieManager $mollie;
 
     public function __construct()
     {
         $this->mollie = app(MollieManager::class);
+
+        $this->type = Config::get('lunar-api.mollie.type', 'mollie');
     }
 
+    /**
+     * Get payment driver on which this adapter binds.
+     *
+     * Drivers for lunar are set in lunar.payments.types.
+     * When mollie is set as a driver, this adapter will be used.
+     */
     public function getDriver(): string
     {
         return Config::get('lunar-api.mollie.driver', 'mollie');
     }
 
+    /**
+     * Get payment type.
+     *
+     * This key serves is an identification for this adapter.
+     * That means that stripe driver is handled by this adapter if configured.
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
     /**
-     * Set cart.
-     */
-    protected function setCart(Cart $cart): void
-    {
-        $this->cart = $cart;
-    }
-
-    /**
-     * Set type
+     * Set payment type.
      */
     protected function setType(string $type): void
     {
         $this->type = $type;
     }
 
-    public function createIntent(Cart $cart, array $meta = [], ?int $amount = null): PaymentIntent
+    /**
+     * Create payment intent.
+     */
+    public function createIntent(Cart $cart, array $meta = [], ?int $amount = null): PaymentIntentContract
     {
-        $this->setCart($cart);
-
         $paymentMethodType = $this->validatePaymentMethodType($meta['payment_method_type'] ?? null);
 
         if ($paymentMethodType === PaymentMethod::IDEAL) {
             $paymentMethodIssuer = $this->validatePaymentIssuer($meta['payment_method_issuer'] ?? null);
+            $meta = Arr::add($meta, 'payment_method_issuer', $paymentMethodIssuer);
         }
 
         try {
             $amount = $amount ?? null;
-            $description = "Lunar web payment for cart #{$cart->id}";
-            $molliePayment = $this->mollie->createPayment($cart->calculate(), $paymentMethodType, $paymentMethodIssuer ?? null, $description, $amount);
+            $molliePayment = $this->mollie->createPayment(
+                cart: $cart->calculate(),
+                paymentMethod: $paymentMethodType,
+                issuer: $paymentMethodIssuer ?? null,
+                description: "Lunar web payment for cart #{$cart->id}",
+                amount: $amount,
+            );
         } catch (Throwable $e) {
             throw new ApiException('Mollie payment failed: '.$e->getMessage());
         }
 
+        $meta = Arr::add($meta, 'mollie_checkout_url', $molliePayment->getCheckoutUrl());
+
         $paymentIntent = new PaymentIntent(
-            id: $molliePayment->id,
-            status: $molliePayment->status,
-            amount: MollieManager::normalizeAmountToInteger($molliePayment->amount->value),
-            meta: [
-                'mollie_checkout_url' => $molliePayment->getCheckoutUrl(),
-            ]
+            intent: $molliePayment,
+            meta: Arr::except($meta, 'payment_method_issuer'),
         );
 
-        $transactionMeta = [
-            'payment_method' => $paymentMethodType,
-            'mollie_checkout_url' => $molliePayment->getCheckoutUrl(),
-        ];
+        $meta = Arr::add($meta, 'payment_method', $paymentMethodType);
 
         $this->setType($paymentMethodType);
 
-        if ($paymentMethodType === PaymentMethod::IDEAL) {
-            $transactionMeta['payment_method_issuer'] = $paymentMethodIssuer;
-        }
-
-        $this->createTransaction($cart, $paymentIntent, [
-            'meta' => $transactionMeta,
-            'type' => 'intent',
-        ]);
+        $this->createIntentTransaction($cart, $paymentIntent, $meta);
 
         return $paymentIntent;
     }
@@ -137,6 +138,9 @@ class MolliePaymentAdapter extends PaymentAdapter
         return $paymentIssuer;
     }
 
+    /**
+     * Handle incoming webhook from Mollie.
+     */
     public function handleWebhook(Request $request): JsonResponse
     {
         $paymentId = $request->get('id');
@@ -151,7 +155,9 @@ class MolliePaymentAdapter extends PaymentAdapter
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
-        $transaction = Transaction::where('reference', $payment->id)->first();
+        $transaction = Transaction::query()
+            ->where('reference', $payment->id)
+            ->first();
 
         try {
             $order = $transaction->order;
@@ -163,20 +169,14 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         $paymentIntent = new PaymentIntent(
-            id: $transaction->reference,
-            status: $payment->status,
-            amount: MollieManager::normalizeAmountToInteger($payment->amount->value),
-            meta: [
-                'mollie_checkout_url' => $payment->getCheckoutUrl(),
-            ]
+            intent: $payment,
+            meta: ['mollie_checkout_url' => $payment->getCheckoutUrl()]
         );
-
-        $this->setCart($order->cart);
 
         if ($payment->isPaid() && $transaction->status !== 'paid') {
             App::make(AuthorizeMolliePayment::class)($order, $paymentIntent, $transaction);
 
-            $this->setTransactionStatus($transaction, 'paid');
+            $this->createChildTransaction($transaction, ['status' => 'paid']);
 
             return response()->json(['message' => 'success']);
         }
@@ -184,15 +184,15 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isCanceled()) {
             OrderPaymentCanceled::dispatch($order, $this, $paymentIntent);
 
-            $this->setTransactionStatus($transaction, 'cancelled');
+            $this->createChildTransaction($transaction, ['status' => 'canceled']);
 
-            return response()->json(['message' => 'cancelled']);
+            return response()->json(['message' => 'canceled']);
         }
 
         if ($payment->isFailed()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
 
-            $this->setTransactionStatus($transaction, 'failed');
+            $this->createChildTransaction($transaction, ['status' => 'failed']);
 
             return response()->json(['message' => 'failed']);
         }
@@ -200,7 +200,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isExpired()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
 
-            $this->setTransactionStatus($transaction, 'expired');
+            $this->createChildTransaction($transaction, ['status' => 'expired']);
 
             return response()->json(['message' => 'expired']);
         }
@@ -208,11 +208,20 @@ class MolliePaymentAdapter extends PaymentAdapter
         return response()->json(['message' => 'unknown event']);
     }
 
-    public function setTransactionStatus(Transaction $transaction, string $status)
+    /**
+     * Create updated child transaction.
+     *
+     * @param  array<string,mixed>  $data
+     */
+    protected function createChildTransaction(Transaction $transaction, array $data): void
     {
-        $transaction->update([
-            'status' => $status,
-        ]);
+        $data = array_merge(
+            Arr::except($transaction->getAttributes(), 'id'),
+            ['parent_transaction_id' => $transaction->id],
+            $data,
+        );
+
+        $child = (new Transaction)->fill($data)->save();
     }
 
     /**

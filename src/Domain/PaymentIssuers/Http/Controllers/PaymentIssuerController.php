@@ -19,7 +19,7 @@ class PaymentIssuerController extends Controller
         $this->mollieManager = $mollieManager;
     }
 
-    public function index()
+    public function index(): DataResponse
     {
         $paymentIssuers = $this->mollieManager->getMolliePaymentIssuers();
 

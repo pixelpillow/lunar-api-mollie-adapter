@@ -3,6 +3,28 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Mollie payment driver
+    |--------------------------------------------------------------------------
+    |
+    | Drivers for lunar are set in lunar.payments.types.
+    | When mollie is set as a driver, this adapter will be used.
+    |
+    */
+    'driver' => 'mollie',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mollie payment type
+    |--------------------------------------------------------------------------
+    |
+    | This key serves is an identification for this adapter.
+    | That means that stripe driver is handled by this adapter if configured.
+    |
+    */
+    'type' => 'mollie',
+
+    /*
+    |--------------------------------------------------------------------------
     | Mollie API key
     |--------------------------------------------------------------------------
     |
