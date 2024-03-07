@@ -280,3 +280,62 @@ test('a payment with a currency with 4 decimals can be created', function () {
         'amount' => $amount,
     ]);
 });
+
+test('can normalize amount to integer', function () {
+    $currency = Currency::getDefault();
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.96', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2096);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.60', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2060);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.6', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2060);
+
+    $amount = MollieManager::normalizeAmountToInteger('20', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(2000);
+});
+
+test('can normalize amount to integer for a currency with 4 decimals', function () {
+    $currency = Currency::factory()->create([
+        'code' => 'USD',
+        'decimal_places' => 4,
+    ]);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(200000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.96', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(209600);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.60', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(206000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(200000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.6', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(206000);
+
+    $amount = MollieManager::normalizeAmountToInteger('20.00', $currency->code);
+    expect($amount)->toBeInt();
+    expect($amount)->toBe(200000);
+});

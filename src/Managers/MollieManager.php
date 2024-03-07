@@ -181,9 +181,9 @@ class MollieManager
      *
      * @param  int  $amount  The amount in cents
      */
-    public static function normalizeAmountToString(int $amount): string
+    public static function normalizeAmountToString(int $amount, int $decimal_places = 2): string
     {
-        return number_format($amount / 100, 2, '.', '');
+        return number_format($amount / 100, $decimal_places, '.', '');
     }
 
     /**
@@ -194,7 +194,6 @@ class MollieManager
      */
     public static function normalizeAmountToInteger(string $amount, string $currency): int
     {
-
         /** @var Currency */
         $currency = Currency::where('code', $currency)->first();
 
@@ -202,12 +201,15 @@ class MollieManager
             throw new InvalidConfigurationException('Currency "'.$currency.'" not found');
         }
 
-        $decimals = $currency->decimal_places;
-        $amount = str_replace('.', '', $amount);
+        $parts = explode('.', $amount);
+        $fraction = isset($parts[1]) ? $parts[1] : '';
+        $fraction_length = strlen($fraction);
 
-        $v = (int) $amount * (10 ** $decimals);
+        if ($fraction_length < $currency->decimal_places) {
+            $fraction .= str_repeat('0', $currency->decimal_places - $fraction_length);
+        }
 
-        return $v;
+        return $parts[0].$fraction;
     }
 
     /**
