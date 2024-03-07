@@ -24,16 +24,12 @@ class PaymentIntent implements PaymentIntentContract
         return $this->intent->id;
     }
 
-    // id: $molliePayment->id,
-    // status: $molliePayment->status,
-    // amount: MollieManager::normalizeAmountToInteger($molliePayment->amount->value),
-
     /**
      * Get amount.
      */
     public function getAmount(): int
     {
-        return MollieManager::normalizeAmountToInteger($this->intent->amount->value);
+        return MollieManager::normalizeAmountToInteger($this->intent->amount->value, $this->intent->amount->currency);
     }
 
     /**

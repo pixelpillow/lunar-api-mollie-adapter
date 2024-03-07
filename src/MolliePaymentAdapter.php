@@ -79,6 +79,7 @@ class MolliePaymentAdapter extends PaymentAdapter
 
         try {
             $amount = $amount ?? null;
+
             $molliePayment = $this->mollie->createPayment(
                 cart: $cart->calculate(),
                 paymentMethod: $paymentMethodType,
@@ -176,7 +177,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isPaid() && $transaction->status !== 'paid') {
             App::make(AuthorizeMolliePayment::class)($order, $paymentIntent, $transaction);
 
-            $this->createChildTransaction($transaction, ['status' => 'paid']);
+            $this->updateTransactionStatus($transaction, 'paid');
 
             return response()->json(['message' => 'success']);
         }
@@ -184,7 +185,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isCanceled()) {
             OrderPaymentCanceled::dispatch($order, $this, $paymentIntent);
 
-            $this->createChildTransaction($transaction, ['status' => 'canceled']);
+            $this->updateTransactionStatus($transaction, 'canceled');
 
             return response()->json(['message' => 'canceled']);
         }
@@ -192,7 +193,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isFailed()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
 
-            $this->createChildTransaction($transaction, ['status' => 'failed']);
+            $this->updateTransactionStatus($transaction, 'failed');
 
             return response()->json(['message' => 'failed']);
         }
@@ -200,7 +201,7 @@ class MolliePaymentAdapter extends PaymentAdapter
         if ($payment->isExpired()) {
             OrderPaymentFailed::dispatch($order, $this, $paymentIntent);
 
-            $this->createChildTransaction($transaction, ['status' => 'expired']);
+            $this->updateTransactionStatus($transaction, 'expired');
 
             return response()->json(['message' => 'expired']);
         }
@@ -209,19 +210,13 @@ class MolliePaymentAdapter extends PaymentAdapter
     }
 
     /**
-     * Create updated child transaction.
-     *
-     * @param  array<string,mixed>  $data
+     * Update the transaction status
      */
-    protected function createChildTransaction(Transaction $transaction, array $data): void
+    protected function updateTransactionStatus(Transaction $transaction, string $status): void
     {
-        $data = array_merge(
-            Arr::except($transaction->getAttributes(), 'id'),
-            ['parent_transaction_id' => $transaction->id],
-            $data,
-        );
-
-        $child = (new Transaction)->fill($data)->save();
+        $transaction->update([
+            'status' => $status,
+        ]);
     }
 
     /**
