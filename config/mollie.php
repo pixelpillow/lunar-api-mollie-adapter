@@ -60,6 +60,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Payment description generator
+    |--------------------------------------------------------------------------
+    |
+    | This generator is used to generate the payment description. This generator
+    | is instantiated with the current Lunar Cart.
+    |
+    */
+    'payment_description_generator' => \Pixelpillow\LunarApiMollieAdapter\Generators\PaymentIntentDescriptionGenerator::class,
+
+    /*
+    |--------------------------------------------------------------------------
     | Testing Webhook URL
     |--------------------------------------------------------------------------
     |

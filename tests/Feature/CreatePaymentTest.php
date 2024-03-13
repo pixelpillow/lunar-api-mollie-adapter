@@ -13,6 +13,7 @@ use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Api\Types\PaymentStatus;
+use Pixelpillow\LunarApiMollieAdapter\Generators\PaymentIntentDescriptionGenerator;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 use Pixelpillow\LunarApiMollieAdapter\Tests\TestCase;
 
@@ -366,4 +367,15 @@ test('can normalize amount to string for a currency with 4 decimals', function (
     $amount = MollieManager::normalizeAmountToString(206000, 4);
     expect($amount)->toBeString();
     expect($amount)->toBe('20.60');
+});
+
+test('can generate a payment intent description', function () {
+    $cart = Cart::factory()->create();
+
+    $generator = new PaymentIntentDescriptionGenerator($cart);
+
+    $description = $generator->generate();
+
+    expect($description)->toBeString();
+    expect($description)->toBe('Payment for order #'.$cart->id);
 });

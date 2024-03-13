@@ -84,7 +84,6 @@ class MolliePaymentAdapter extends PaymentAdapter
                 cart: $cart->calculate(),
                 paymentMethod: $paymentMethodType,
                 issuer: $paymentMethodIssuer ?? null,
-                description: "Lunar web payment for cart #{$cart->id}",
                 amount: $amount,
             );
         } catch (Throwable $e) {

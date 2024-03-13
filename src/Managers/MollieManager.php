@@ -35,7 +35,6 @@ class MollieManager
         Cart $cart,
         string $paymentMethod,
         ?string $issuer = null,
-        ?string $description = null,
         ?int $amount = null
     ): Payment {
         $amount = $amount ?? $cart->total->value;
@@ -59,7 +58,7 @@ class MollieManager
                 'currency' => $cart->currency->code,
                 'value' => self::normalizeAmountToString($amount, $currency->decimal_places),
             ],
-            'description' => $description,
+            'description' => self::getPaymentDescription($cart),
             'redirectUrl' => self::getRedirectUrl($cart),
             'cancelUrl' => self::getCancelUrl($cart),
             'webhookUrl' => self::getWebhookUrl(),
@@ -147,6 +146,30 @@ class MollieManager
         $redirectUrlGenerator = new $redirectUrlGeneratorClass($cart);
 
         return $redirectUrlGenerator->generate();
+    }
+
+    /**
+     * Get the payment description from the config
+     *
+     * @param  Cart  $cart  The cart to get the payment description for.
+     * @return string The payment description
+     *
+     * @throws InvalidConfigurationException When the payment description is not set
+     */
+    public static function getPaymentDescription(Cart $cart): string
+    {
+        $paymentDescriptionGeneratorClass = Config::get('lunar-api.mollie.payment_description_generator');
+
+        if (! $paymentDescriptionGeneratorClass && ! class_exists($paymentDescriptionGeneratorClass)) {
+            throw new InvalidConfigurationException('Mollie payment description generator not set in config');
+        }
+
+        /**
+         * @var BaseUrlGenerator $paymentDescriptionGenerator
+         */
+        $paymentDescriptionGenerator = new $paymentDescriptionGeneratorClass($cart);
+
+        return $paymentDescriptionGenerator->generate();
     }
 
     /**
