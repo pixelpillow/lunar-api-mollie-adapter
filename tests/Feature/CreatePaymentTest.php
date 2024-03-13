@@ -339,3 +339,31 @@ test('can normalize amount to integer for a currency with 4 decimals', function 
     expect($amount)->toBeInt();
     expect($amount)->toBe(200000);
 });
+
+test('can normalize amount to string', function () {
+    $amount = MollieManager::normalizeAmountToString(2000);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.00');
+
+    $amount = MollieManager::normalizeAmountToString(2096);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.96');
+
+    $amount = MollieManager::normalizeAmountToString(2060);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.60');
+});
+
+test('can normalize amount to string for a currency with 4 decimals', function () {
+    $amount = MollieManager::normalizeAmountToString(200000, 4);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.00');
+
+    $amount = MollieManager::normalizeAmountToString(209600, 4);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.96');
+
+    $amount = MollieManager::normalizeAmountToString(206000, 4);
+    expect($amount)->toBeString();
+    expect($amount)->toBe('20.60');
+});

@@ -39,6 +39,7 @@ class MollieManager
         ?int $amount = null
     ): Payment {
         $amount = $amount ?? $cart->total->value;
+        $currency = $cart->currency;
 
         $meta = (array) $cart->meta;
 
@@ -56,7 +57,7 @@ class MollieManager
         $payment = [
             'amount' => [
                 'currency' => $cart->currency->code,
-                'value' => self::normalizeAmountToString($amount),
+                'value' => self::normalizeAmountToString($amount, $currency->decimal_places),
             ],
             'description' => $description,
             'redirectUrl' => self::getRedirectUrl($cart),
@@ -183,7 +184,11 @@ class MollieManager
      */
     public static function normalizeAmountToString(int $amount, int $decimal_places = 2): string
     {
-        return number_format($amount / 100, $decimal_places, '.', '');
+
+        // 2950000
+        $v = (int) str_pad('1', $decimal_places + 1, '0', STR_PAD_RIGHT);
+
+        return number_format($amount / $v, 2, '.', '');
     }
 
     /**
