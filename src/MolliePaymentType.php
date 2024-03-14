@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Config;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Base\DataTransferObjects\PaymentCapture;
 use Lunar\Base\DataTransferObjects\PaymentRefund;
+use Lunar\Models\Order;
 use Lunar\Models\Transaction;
 use Lunar\PaymentTypes\AbstractPayment;
 use Mollie\Api\Exceptions\ApiException;
@@ -31,10 +32,20 @@ class MolliePaymentType extends AbstractPayment
     public function authorize(): PaymentAuthorize
     {
         if (! $this->order) {
-            if (! $this->order = $this->cart->order) {
-                $this->order = $this->cart->createOrder();
+
+            $orderId = $this->data['order_id'];
+
+            $this->order = Order::find($orderId);
+
+            if (! $this->order) {
+                return new PaymentAuthorize(
+                    success: false,
+                    message: 'Order not found',
+                    orderId: $orderId
+                );
             }
         }
+
         $this->molliePayment = $this->mollie->getPayment($this->data['payment_intent']);
 
         $transaction = Transaction::where('reference', $this->data['payment_intent'])
@@ -84,7 +95,12 @@ class MolliePaymentType extends AbstractPayment
             ]);
         }
 
-        if ($this->molliePayment->status === PaymentStatus::STATUS_PAID) {
+        $this->order->refresh();
+
+        if (
+            $this->molliePayment->status === PaymentStatus::STATUS_PAID &&
+            $this->order->status === 'payment-received'
+        ) {
             $this->order->placed_at = $this->molliePayment->paidAt;
         }
 
