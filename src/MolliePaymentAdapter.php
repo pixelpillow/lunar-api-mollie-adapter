@@ -173,6 +173,11 @@ class MolliePaymentAdapter extends PaymentAdapter
             meta: ['mollie_checkout_url' => $payment->getCheckoutUrl()]
         );
 
+        // Payment is already paid
+        if ($payment->isPaid() && $transaction->status === 'paid') {
+            return response()->json(['message' => 'success']);
+        }
+
         if ($payment->isPaid() && $transaction->status !== 'paid') {
             App::make(AuthorizeMolliePayment::class)($order, $paymentIntent, $transaction);
 
@@ -213,6 +218,7 @@ class MolliePaymentAdapter extends PaymentAdapter
      */
     protected function updateTransactionStatus(Transaction $transaction, string $status): void
     {
+
         $transaction->update([
             'status' => $status,
         ]);
