@@ -18,6 +18,7 @@ class AuthorizeMolliePayment
             ->cart($order->cart)
             ->withData([
                 'payment_intent' => $intent->getId(),
+                'order_id' => $order->getRouteKey(),
             ])
             ->authorize();
 
