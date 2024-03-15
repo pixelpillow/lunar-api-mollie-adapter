@@ -101,6 +101,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allow order status update
+    |--------------------------------------------------------------------------
+    |
+    | This setting allows the adapter to update the order status when the payment
+    | status changes. If set to false, the order status will not be updated.
+    |
+    */
+    'allow_order_status_update' => true,
+
+    /*
+    |--------------------------------------------------------------------------
     | Lunar Api Domain Configuration
     |--------------------------------------------------------------------------
     |

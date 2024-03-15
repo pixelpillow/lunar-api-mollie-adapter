@@ -53,7 +53,7 @@ class MolliePaymentType extends AbstractPayment
             ->where('driver', 'mollie')
             ->first();
 
-        if (! $transaction || ! $this->molliePayment || ! $this->order) {
+        if (! $transaction || ! $this->molliePayment) {
             return new PaymentAuthorize(
                 success: false,
                 message: 'Transaction not found',
@@ -95,7 +95,7 @@ class MolliePaymentType extends AbstractPayment
             ]);
         }
 
-        $this->order->refresh();
+        $this->order = $this->order->refresh();
 
         if (
             $this->molliePayment->status === PaymentStatus::STATUS_PAID &&
@@ -106,7 +106,9 @@ class MolliePaymentType extends AbstractPayment
 
         $paymentStatus = $this->molliePayment->status;
 
-        $this->order->status = Config::get('lunar-api.mollie.payment_status_mappings.'.$paymentStatus) ?: $paymentStatus;
+        if (Config::get('lunar-api.mollie.allow_order_status_update')) {
+            $this->order->status = Config::get('lunar-api.mollie.payment_status_mappings.'.$paymentStatus) ?: $paymentStatus;
+        }
 
         $this->order->save();
 
