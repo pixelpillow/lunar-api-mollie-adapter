@@ -21,7 +21,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "dystcz/lunar-api": "^0.8",
+    "dystcz/lunar-api": "1.0.0-alpha.2",
     "illuminate/contracts": "^10.0",
     "mollie/laravel-mollie": "^2.25"
   },
