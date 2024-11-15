@@ -22,9 +22,7 @@ class MolliePaymentType extends AbstractPayment
      */
     protected Payment $molliePayment;
 
-    public function __construct(protected MollieManager $mollie)
-    {
-    }
+    public function __construct(protected MollieManager $mollie) {}
 
     /**
      * Authorize the payment for processing.
