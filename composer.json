@@ -11,7 +11,7 @@
   ],
   "homepage": "https://github.com/pixelpillow/lunar-api-mollie-adapter",
   "license": "MIT",
-  "version": "0.1.9",
+  "version": "1.0.0-beta.3",
   "authors": [
     {
       "name": "Thomas van der Westen",
@@ -21,20 +21,16 @@
   ],
   "require": {
     "php": "^8.2",
-    "dystcz/lunar-api": "1.0.0-alpha.2",
+    "dystcz/lunar-api": "1.0.0-beta.3",
     "mollie/laravel-mollie": "^3.0"
   },
   "require-dev": {
-    "laravel/pint": "^1.9",
+    "laravel/pint": "^1.16",
     "nunomaduro/collision": "^8.1",
-    "nunomaduro/larastan": "^2.9",
     "orchestra/testbench": "^9.1",
-    "pestphp/pest": "^2.34",
-    "pestphp/pest-plugin-arch": "^2.7",
-    "pestphp/pest-plugin-laravel": "^2.4",
-    "phpstan/extension-installer": "^1.4",
-    "phpstan/phpstan-deprecation-rules": "^1.2",
-    "phpstan/phpstan-phpunit": "^1.4",
+    "pestphp/pest": "^3.0",
+    "pestphp/pest-plugin-arch": "^3.0",
+    "pestphp/pest-plugin-laravel": "^3.0",
     "laravel-json-api/testing": "^3.0",
     "spatie/laravel-ray": "^1.36"
   },

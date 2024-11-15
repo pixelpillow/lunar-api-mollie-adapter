@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
-use Lunar\Models\Cart;
+use Lunar\Models\Contracts\Cart as CartContract;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
@@ -68,7 +68,7 @@ class MolliePaymentAdapter extends PaymentAdapter
     /**
      * Create payment intent.
      */
-    public function createIntent(Cart $cart, array $meta = [], ?int $amount = null): PaymentIntentContract
+    public function createIntent(CartContract $cart, array $meta = [], ?int $amount = null): PaymentIntentContract
     {
         $paymentMethodType = $this->validatePaymentMethodType($meta['payment_method_type'] ?? null);
 
