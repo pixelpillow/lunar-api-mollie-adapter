@@ -2,9 +2,9 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Actions;
 
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentSuccessful;
-use Dystcz\LunarApi\Domain\Orders\Models\Order;
-use Dystcz\LunarApi\Domain\Payments\Contracts\PaymentIntent;
+use Dystore\Api\Domain\Orders\Events\OrderPaymentSuccessful;
+use Dystore\Api\Domain\Orders\Models\Order;
+use Dystore\Api\Domain\Payments\Contracts\PaymentIntent;
 use Lunar\Base\DataTransferObjects\PaymentAuthorize;
 use Lunar\Facades\Payments;
 use Lunar\Models\Transaction;

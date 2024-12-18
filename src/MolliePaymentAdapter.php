@@ -2,11 +2,11 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter;
 
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentCanceled;
-use Dystcz\LunarApi\Domain\Orders\Events\OrderPaymentFailed;
-use Dystcz\LunarApi\Domain\Payments\Contracts\PaymentIntent as PaymentIntentContract;
-use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentAdapter;
-use Dystcz\LunarApi\Domain\Transactions\Models\Transaction;
+use Dystore\Api\Domain\Orders\Events\OrderPaymentCanceled;
+use Dystore\Api\Domain\Orders\Events\OrderPaymentFailed;
+use Dystore\Api\Domain\Payments\Contracts\PaymentIntent as PaymentIntentContract;
+use Dystore\Api\Domain\Payments\PaymentAdapters\PaymentAdapter;
+use Dystore\Api\Domain\Transactions\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;

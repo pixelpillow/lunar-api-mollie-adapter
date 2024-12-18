@@ -21,7 +21,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "dystcz/lunar-api": "1.0.0-beta.3",
+    "dystcz/dystore-api": "^1.0.0",
     "mollie/laravel-mollie": "^3.0"
   },
   "require-dev": {

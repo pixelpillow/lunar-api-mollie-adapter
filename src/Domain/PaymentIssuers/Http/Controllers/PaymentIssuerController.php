@@ -2,7 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Http\Controllers;
 
-use Dystcz\LunarApi\Base\Controller;
+use Dystore\Api\Base\Controller;
 use LaravelJsonApi\Core\Responses\DataResponse;
 use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Models\PaymentIssuer;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;

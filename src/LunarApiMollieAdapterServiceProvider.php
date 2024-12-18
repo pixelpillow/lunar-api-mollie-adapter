@@ -2,7 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter;
 
-use Dystcz\LunarApi\Base\Facades\SchemaManifestFacade;
+use Dystore\Api\Base\Facades\SchemaManifestFacade;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Facades\Payments;

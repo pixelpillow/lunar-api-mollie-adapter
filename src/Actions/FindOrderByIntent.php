@@ -2,9 +2,9 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Actions;
 
-use Dystcz\LunarApi\Domain\Orders\Actions\FindOrderByIntent as ActionsFindOrderByIntent;
-use Dystcz\LunarApi\Domain\Orders\Models\Order;
-use Dystcz\LunarApi\Domain\Payments\PaymentAdapters\PaymentIntent;
+use Dystore\Api\Domain\Orders\Actions\FindOrderByIntent as ActionsFindOrderByIntent;
+use Dystore\Api\Domain\Orders\Models\Order;
+use Dystore\Api\Domain\Payments\Contracts\PaymentIntent;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FindOrderByIntent extends ActionsFindOrderByIntent

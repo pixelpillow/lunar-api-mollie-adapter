@@ -2,7 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Http\Routing;
 
-use Dystcz\LunarApi\Routing\RouteGroup;
+use Dystore\Api\Routing\RouteGroup;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Http\Controllers\PaymentIssuerController;
 
