@@ -1,12 +1,15 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Listen for XDebug on valet",
-            "type": "php",
-            "request": "launch",
-            "port": 9003,
-            "ignore": ["**/vender/**/*.php", "**/vendor/laravel/pint/**/*.php"]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Listen for XDebug on valet",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "log": false,
+      // "skipFiles": ["**/vendor/**", "phar:/**", "**/bin/pint/**"],
+      // "skipEntryPaths": ["**/vendor/**", "phar:/**", "**/bin/pint/**"]
+      "skipEntryPaths": ["**/bin/pint/**"]
+    }
+  ]
 }

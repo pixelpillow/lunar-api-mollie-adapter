@@ -18,6 +18,7 @@ use Lunar\Models\Currency;
 use Lunar\Models\CustomerGroup;
 use Lunar\Models\Order;
 use Lunar\Models\TaxClass;
+use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar\TestShippingModifier;
 use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar\TestTaxDriver;
@@ -27,6 +28,7 @@ use Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\TestRedirectGenerator;
 class TestCase extends Orchestra
 {
     use MakesJsonApiRequests;
+    use WithWorkbench;
 
     /**
      * The order.
@@ -110,9 +112,9 @@ class TestCase extends Orchestra
             // Livewire
             \Livewire\LivewireServiceProvider::class,
 
-            // Lunar API
-            \Dystcz\LunarApi\LunarApiServiceProvider::class,
-            \Dystcz\LunarApi\JsonApiServiceProvider::class,
+            // Dystore API
+            \Dystore\Api\ApiServiceProvider::class,
+            \Dystore\Api\JsonApiServiceProvider::class,
 
             // Lunar API Mollie Adapter
             \Pixelpillow\LunarApiMollieAdapter\LunarApiMollieAdapterServiceProvider::class,
@@ -127,14 +129,9 @@ class TestCase extends Orchestra
         $app->useEnvironmentPath(__DIR__.'/..');
         $app->bootstrapWith([LoadEnvironmentVariables::class]);
 
-        Config::set('lunar-api.mollie.mollie_key', 'test_G3ys6guxc9Su7VJ2xctR4N4VqvGbQR');
-        Config::set('lunar-api.mollie.redirect_url_generator', TestRedirectGenerator::class);
-        Config::set('lunar-api.mollie.cancel_url_generator', TestRedirectGenerator::class);
-
-        // Config::set('auth.providers.users', [
-        //     'driver' => 'eloquent',
-        //     'model' => User::class,
-        // ]);
+        Config::set('dystore.mollie.mollie_key', 'test_G3ys6guxc9Su7VJ2xctR4N4VqvGbQR');
+        Config::set('dystore.mollie.redirect_url_generator', TestRedirectGenerator::class);
+        Config::set('dystore.mollie.cancel_url_generator', TestRedirectGenerator::class);
 
         /**
          * Lunar configuration
@@ -150,7 +147,6 @@ class TestCase extends Orchestra
         Config::set('database.connections.sqlite', [
             'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix' => '',
         ]);
 
         // Default payment driver

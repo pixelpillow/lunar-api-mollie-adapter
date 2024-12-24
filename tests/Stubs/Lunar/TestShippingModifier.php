@@ -2,6 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Tests\Stubs\Lunar;
 
+use Closure;
 use Lunar\Base\ShippingModifier;
 use Lunar\DataTypes\Price;
 use Lunar\DataTypes\ShippingOption;
@@ -18,7 +19,7 @@ class TestShippingModifier extends ShippingModifier
 
     public static string $identifier = 'FFCDEL';
 
-    public function handle(Cart $cart)
+    public function handle(Cart $cart, Closure $next)
     {
         ShippingManifest::addOption(
             new ShippingOption(
@@ -43,6 +44,8 @@ class TestShippingModifier extends ShippingModifier
                 )
             );
         }
+
+        return $next($cart);
     }
 
     /**

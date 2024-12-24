@@ -110,7 +110,7 @@ class MollieManager
 
         // return a different webhook URL when Testing
         if (app()->environment('testing')) {
-            $webhookUrl = Config::get('lunar-api.mollie.webhook_url_testing', null);
+            $webhookUrl = Config::get('dystore.mollie.webhook_url_testing', null);
         }
 
         if ($webhookUrl === null) {
@@ -134,7 +134,7 @@ class MollieManager
      */
     public static function getRedirectUrl(Cart $cart): string
     {
-        $redirectUrlGeneratorClass = Config::get('lunar-api.mollie.redirect_url_generator');
+        $redirectUrlGeneratorClass = Config::get('dystore.mollie.redirect_url_generator');
 
         if (! $redirectUrlGeneratorClass && ! class_exists($redirectUrlGeneratorClass)) {
             throw new InvalidConfigurationException('Mollie redirect URL generator not set in config');
@@ -158,7 +158,7 @@ class MollieManager
      */
     public static function getPaymentDescription(Cart $cart): string
     {
-        $paymentDescriptionGeneratorClass = Config::get('lunar-api.mollie.payment_description_generator');
+        $paymentDescriptionGeneratorClass = Config::get('dystore.mollie.payment_description_generator');
 
         if (! $paymentDescriptionGeneratorClass && ! class_exists($paymentDescriptionGeneratorClass)) {
             throw new InvalidConfigurationException('Mollie payment description generator not set in config');
@@ -182,7 +182,7 @@ class MollieManager
      */
     public static function getCancelUrl(Cart $cart): string
     {
-        $cancelUrlGeneratorClass = Config::get('lunar-api.mollie.cancel_url_generator');
+        $cancelUrlGeneratorClass = Config::get('dystore.mollie.cancel_url_generator');
 
         if (! $cancelUrlGeneratorClass && ! class_exists($cancelUrlGeneratorClass)) {
             throw new InvalidConfigurationException('Mollie cancel URL generator not set in config');

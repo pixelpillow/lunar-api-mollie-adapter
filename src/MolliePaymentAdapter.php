@@ -229,7 +229,7 @@ class MolliePaymentAdapter extends PaymentAdapter
      */
     public static function initMollieManager(): void
     {
-        $mollieKey = Config::get('lunar-api.mollie.mollie_key');
+        $mollieKey = Config::get('dystore.mollie.mollie_key');
 
         Config::set('mollie.key', $mollieKey);
     }

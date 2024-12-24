@@ -9,7 +9,7 @@
 
 # Description
 
-This package is designed to seamlessly integrate Mollie payments into your [Lunar](https://lunarphp.io/) storefront. By leveraging the [Lunar API](https://github.com/dystcz/lunar-api), this adapter makes it easy to accept and manage payments through Mollie, a popular payment service provider.
+This package is designed to seamlessly integrate Mollie payments into your [Lunar](https://lunarphp.io/) storefront. By leveraging the [Dystore Lunar API](https://github.com/dystcz/dystore-api), this adapter makes it easy to accept and manage payments through Mollie, a popular payment service provider.
 
 Whether you're running an e-commerce platform or a subscription service, this adapter will help you handle payments efficiently and securely. With easy installation and configuration, you can have Mollie payments up and running on your Lunar storefront in no time.
 
@@ -20,7 +20,7 @@ Please follow the installation and configuration instructions in the Installatio
 This package depends on the following packages:
 
 - [Lunar](https://lunarphp.io/)
-- [Lunar API](https://github.com/dystcz/lunar-api)
+- [Dystore Lunar API](https://github.com/dystcz/dystore-api)
 
 ## Features
 

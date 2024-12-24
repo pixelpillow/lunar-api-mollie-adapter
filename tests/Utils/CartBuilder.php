@@ -60,7 +60,6 @@ class CartBuilder
 
         Price::factory()->create([
             'price' => 100,
-            'tier' => 1,
             'currency_id' => $currency->id,
             'priceable_type' => get_class($purchasable),
             'priceable_id' => $purchasable->id,
