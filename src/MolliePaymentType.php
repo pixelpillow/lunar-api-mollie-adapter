@@ -123,7 +123,7 @@ class MolliePaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
-        //Not applicable for Mollie
+        // Not applicable for Mollie
 
         return new PaymentCapture(success: true);
     }

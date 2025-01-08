@@ -6,7 +6,6 @@ use Dystore\Api\Base\Facades\SchemaManifestFacade;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Facades\Payments;
-use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\JsonApi\V1\PaymentIssuerSchema;
 use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentMethods\JsonApi\V1\PaymentMethodSchema;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 
@@ -66,7 +65,6 @@ class LunarApiMollieAdapterServiceProvider extends ServiceProvider
      */
     public function registerSchemas(): void
     {
-        SchemaManifestFacade::registerSchema(PaymentIssuerSchema::class);
         SchemaManifestFacade::registerSchema(PaymentMethodSchema::class);
     }
 }

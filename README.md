@@ -168,8 +168,7 @@ The create-payment-intent url is a signed url can be found in the response of th
     "attributes": {
       "payment_method": "mollie",
       "meta": {
-        "payment_method_type": "ideal",
-        "payment_method_issuer": "ideal_ABNANL2A"
+        "payment_method_type": "ideal"
       }
     }
   }
@@ -227,39 +226,6 @@ Example response:
       },
       "links": {
         "self": "https://api.monoz.test/api/v1/payment-methods/ideal"
-      }
-    }
-  ]
-}
-```
-
-### POST /api/v1/payment-issuers
-
-Returns a list of available payment issuers for ideal payments, including the issuer ID, issuer name and more. See the [Mollie API documentation](https://docs.mollie.com/reference/v2/methods-api/list-methods#includes) for more information.
-
-Example response:
-
-```json
-{
-  "jsonapi": {
-    "version": "1.0"
-  },
-  "data": [
-    {
-      "type": "payment-issuers",
-      "id": "ideal_ABNANL2A",
-      "attributes": {
-        "resource": "issuer",
-        "name": "ABN AMRO",
-        "issuer_id": "ideal_ABNANL2A",
-        "image": [
-          "https://www.mollie.com/external/icons/ideal-issuers/ABNANL2A.png",
-          "https://www.mollie.com/external/icons/ideal-issuers/ABNANL2A%402x.png",
-          "https://www.mollie.com/external/icons/ideal-issuers/ABNANL2A.svg"
-        ]
-      },
-      "links": {
-        "self": "https://api.monoz.test/api/v1/payment-issuers/ideal_ABNANL2A"
       }
     }
   ]

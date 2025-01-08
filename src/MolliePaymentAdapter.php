@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Lunar\Models\Contracts\Cart as CartContract;
 use Mollie\Api\Exceptions\ApiException;
-use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Actions\AuthorizeMolliePayment;
 use Pixelpillow\LunarApiMollieAdapter\Domain\Payments\Data\PaymentIntent;
@@ -72,18 +71,12 @@ class MolliePaymentAdapter extends PaymentAdapter
     {
         $paymentMethodType = $this->validatePaymentMethodType($meta['payment_method_type'] ?? null);
 
-        if ($paymentMethodType === PaymentMethod::IDEAL) {
-            $paymentMethodIssuer = $this->validatePaymentIssuer($meta['payment_method_issuer'] ?? null);
-            $meta = Arr::add($meta, 'payment_method_issuer', $paymentMethodIssuer);
-        }
-
         try {
             $amount = $amount ?? null;
 
             $molliePayment = $this->mollie->createPayment(
                 cart: $cart->calculate(),
                 paymentMethod: $paymentMethodType,
-                issuer: $paymentMethodIssuer ?? null,
                 amount: $amount,
             );
         } catch (Throwable $e) {
@@ -94,7 +87,7 @@ class MolliePaymentAdapter extends PaymentAdapter
 
         $paymentIntent = new PaymentIntent(
             intent: $molliePayment,
-            meta: Arr::except($meta, 'payment_method_issuer'),
+            meta: $meta,
         );
 
         $meta = Arr::add($meta, 'payment_method', $paymentMethodType);
@@ -122,20 +115,6 @@ class MolliePaymentAdapter extends PaymentAdapter
         }
 
         return $paymentMethodType;
-    }
-
-    /**
-     * Validate the payment issuer against the Mollie payment issuers
-     *
-     * @param  string|null  $paymentIssuer  The payment issuer eg. ideal_ABNANL2A
-     */
-    public function validatePaymentIssuer(?string $paymentIssuer): ?string
-    {
-        if (! $paymentIssuer) {
-            throw new MissingMetadataException('Payment issuer is required');
-        }
-
-        return $paymentIssuer;
     }
 
     /**
@@ -173,7 +152,6 @@ class MolliePaymentAdapter extends PaymentAdapter
             meta: ['mollie_checkout_url' => $payment->getCheckoutUrl()]
         );
 
-        // Payment is already paid
         if ($payment->isPaid() && $transaction->status === 'paid') {
             return response()->json(['message' => 'success']);
         }
@@ -218,7 +196,6 @@ class MolliePaymentAdapter extends PaymentAdapter
      */
     protected function updateTransactionStatus(Transaction $transaction, string $status): void
     {
-
         $transaction->update([
             'status' => $status,
         ]);

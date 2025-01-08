@@ -13,6 +13,8 @@ class AuthorizeMolliePayment
 {
     public function __invoke(Order $order, PaymentIntent $intent, Transaction $transaction): void
     {
+        $order->refresh(); // Ensure we have the latest order data
+
         /** @var PaymentAuthorize $payment */
         $payment = Payments::driver('mollie')
             ->cart($order->cart)

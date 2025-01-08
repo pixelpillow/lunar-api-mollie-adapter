@@ -119,17 +119,6 @@ return [
     |
     */
     'domains' => [
-        'payment-issuers' => [
-            'model' => \Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Models\PaymentIssuer::class,
-            'lunar_model' => null,
-            'policy' => null,
-            'schema' => \Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\JsonApi\V1\PaymentIssuerSchema::class,
-            'resource' => null,
-            'query' => null,
-            'collection_query' => null,
-            'routes' => \Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\Http\Routing\PaymentIssuerRouteGroup::class,
-            'route_actions' => [],
-        ],
         'payment-methods' => [
             'model' => \Pixelpillow\LunarApiMollieAdapter\Domain\PaymentMethods\Models\PaymentMethod::class,
             'lunar_model' => null,
