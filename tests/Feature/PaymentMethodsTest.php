@@ -8,11 +8,11 @@ uses(TestCase::class, RefreshDatabase::class);
 
 it('can get mollie payment methods', function () {
 
-    $paymentIssuers = file_get_contents(__DIR__.'../../Stubs/Mollie/PaymentIssuers.json');
+    $paymentMethods = file_get_contents(__DIR__.'../../Stubs/Mollie/PaymentMethods.json');
 
     Http::fake(
         ['https://api.mollie.com/v2/*' => Http::response(
-            $paymentIssuers,
+            $paymentMethods,
             200,
         )]
     );
@@ -27,7 +27,7 @@ it('can get mollie payment methods', function () {
 
     $json = $response->json();
 
-    // $response->assertStatusCode(200);
+    $response->assertStatusCode(200);
 
     $this->assertArrayHasKey('data', $json);
 

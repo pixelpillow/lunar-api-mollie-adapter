@@ -3,8 +3,7 @@
 namespace Pixelpillow\LunarApiMollieAdapter\JsonApi\V1;
 
 use LaravelJsonApi\Core\Server\Server as BaseServer;
-use Pixelpillow\LunarApiMollieAdapter\Domain\Lunar\Mollie\PaymentMethods\JsonApi\V1\PaymentMethodSchema;
-use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentIssuers\JsonApi\V1\PaymentIssuerSchema;
+use Pixelpillow\LunarApiMollieAdapter\Domain\PaymentMethods\JsonApi\V1\PaymentMethodSchema;
 
 class Server extends BaseServer
 {
@@ -27,7 +26,6 @@ class Server extends BaseServer
     protected function allSchemas(): array
     {
         return [
-            PaymentIssuerSchema::class,
             PaymentMethodSchema::class,
         ];
     }

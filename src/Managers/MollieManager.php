@@ -8,11 +8,9 @@ use Lunar\Models\Cart;
 use Lunar\Models\Currency;
 use Lunar\Models\Transaction;
 use Mollie\Api\Exceptions\ApiException;
-use Mollie\Api\Resources\IssuerCollection;
 use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Resources\Payment;
 use Mollie\Api\Resources\Refund;
-use Mollie\Api\Types\PaymentMethod;
 use Mollie\Laravel\Facades\Mollie;
 use Pixelpillow\LunarApiMollieAdapter\Exceptions\InvalidConfigurationException;
 use Pixelpillow\LunarApiMollieAdapter\Generators\BaseUrlGenerator;
@@ -24,7 +22,6 @@ class MollieManager
      *
      * @param  Cart  $cart  The cart to create the payment for.
      * @param  string  $paymentMethod  The payment method to use.
-     * @param  string|null  $issuer  The issuer to use for iDEAL payments.
      * @param  string|null  $description  The description to use for the payment.
      * @param  int|null  $amount  A custom amount in cents to use for the payment.
      * @return Payment The Mollie payment
@@ -34,12 +31,10 @@ class MollieManager
     public function createPayment(
         Cart $cart,
         string $paymentMethod,
-        ?string $issuer = null,
         ?int $amount = null
     ): Payment {
         $amount = $amount ?? $cart->total->value;
         $currency = $cart->currency;
-
         $meta = (array) $cart->meta;
 
         // Try to get payment if id is stored in meta
@@ -66,10 +61,6 @@ class MollieManager
             'method' => $paymentMethod,
         ];
 
-        if ($paymentMethod === PaymentMethod::IDEAL) {
-            $payment['issuer'] = $issuer;
-        }
-
         return Mollie::api()->payments->create($payment);
     }
 
@@ -83,7 +74,9 @@ class MollieManager
             'description' => $notes ?? 'Refund for order '.$transaction->order->reference,
         ];
 
-        return Mollie::api()->payments->refund($transaction->reference, $payment);
+        $payment = Mollie::api()->payments->get($transaction->reference);
+
+        return Mollie::api()->payments->refund($payment);
     }
 
     /**
@@ -238,26 +231,6 @@ class MollieManager
         }
 
         return $parts[0].$fraction;
-    }
-
-    /**
-     * Get a list of Mollie payment issuers for iDEAL payments
-     *
-     * @return IssuerCollection The Mollie payment issuers.
-     *
-     * @see https://docs.mollie.com/reference/v2/methods-api/list-methods
-     */
-    public function getMolliePaymentIssuers(): ?IssuerCollection
-    {
-        try {
-            $reponse = Mollie::api()->methods->get(\Mollie\Api\Types\PaymentMethod::IDEAL, ['include' => 'issuers']);
-
-            return $reponse->issuers();
-        } catch (ApiException $e) {
-            report($e);
-        }
-
-        return null;
     }
 
     /**

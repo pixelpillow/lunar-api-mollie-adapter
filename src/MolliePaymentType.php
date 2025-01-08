@@ -22,9 +22,7 @@ class MolliePaymentType extends AbstractPayment
      */
     protected Payment $molliePayment;
 
-    public function __construct(protected MollieManager $mollie)
-    {
-    }
+    public function __construct(protected MollieManager $mollie) {}
 
     /**
      * Authorize the payment for processing.
@@ -125,7 +123,7 @@ class MolliePaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
-        //Not applicable for Mollie
+        // Not applicable for Mollie
 
         return new PaymentCapture(success: true);
     }
