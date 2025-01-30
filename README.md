@@ -76,7 +76,7 @@ return [
 
 namespace App\Mollie\Generators;
 
-use Dystore\Api\Domain\Carts\Models\Cart;
+use Dystcz\LunarApi\Domain\Carts\Models\Cart;
 use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
 
 class CustomRedirectOnSuccessUrlGenerator extends RedirectOnSuccessUrlGenerator
@@ -115,7 +115,7 @@ class CustomRedirectOnSuccessUrlGenerator extends RedirectOnSuccessUrlGenerator
 
 namespace App\Mollie\Generators;
 
-use Dystore\Api\Domain\Carts\Models\Cart;
+use Dystcz\LunarApi\Domain\Carts\Models\Cart;
 use Lunar\Models\Order;
 use Pixelpillow\LunarApiMollieAdapter\Generators\RedirectOnSuccessUrlGenerator;
 

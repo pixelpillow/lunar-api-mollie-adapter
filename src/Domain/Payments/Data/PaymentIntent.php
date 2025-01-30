@@ -2,7 +2,7 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Domain\Payments\Data;
 
-use Dystore\Api\Domain\Payments\Contracts\PaymentIntent as PaymentIntentContract;
+use Dystcz\LunarApi\Domain\Payments\Contracts\PaymentIntent as PaymentIntentContract;
 use Pixelpillow\LunarApiMollieAdapter\Managers\MollieManager;
 
 class PaymentIntent implements PaymentIntentContract

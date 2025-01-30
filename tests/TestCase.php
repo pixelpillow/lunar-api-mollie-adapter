@@ -113,8 +113,8 @@ class TestCase extends Orchestra
             \Livewire\LivewireServiceProvider::class,
 
             // Dystore API
-            \Dystore\Api\ApiServiceProvider::class,
-            \Dystore\Api\JsonApiServiceProvider::class,
+            \Dystcz\LunarApi\ApiServiceProvider::class,
+            \Dystcz\LunarApi\JsonApiServiceProvider::class,
 
             // Lunar API Mollie Adapter
             \Pixelpillow\LunarApiMollieAdapter\LunarApiMollieAdapterServiceProvider::class,

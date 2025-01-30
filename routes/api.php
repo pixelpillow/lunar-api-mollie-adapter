@@ -1,6 +1,6 @@
 <?php
 
-use Dystore\Api\Support\Config\Actions\RegisterRoutesFromConfig;
+use Dystcz\LunarApi\Support\Config\Actions\RegisterRoutesFromConfig;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
