@@ -2,6 +2,8 @@
 
 namespace Pixelpillow\LunarApiMollieAdapter\Tests;
 
+use Dystcz\LunarApi\JsonApiServiceProvider;
+use Dystcz\LunarApi\LunarApiServiceProvider;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
@@ -113,8 +115,8 @@ class TestCase extends Orchestra
             \Livewire\LivewireServiceProvider::class,
 
             // Dystore API
-            \Dystcz\LunarApi\ApiServiceProvider::class,
-            \Dystcz\LunarApi\JsonApiServiceProvider::class,
+            LunarApiServiceProvider::class,
+            JsonApiServiceProvider::class,
 
             // Lunar API Mollie Adapter
             \Pixelpillow\LunarApiMollieAdapter\LunarApiMollieAdapterServiceProvider::class,
