@@ -19,7 +19,7 @@ class LunarApiMollieAdapterServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__.'/../config/mollie.php', 'dystore.mollie');
+        $this->mergeConfigFrom(__DIR__.'/../config/mollie.php', 'lunar-api.mollie');
 
         // Register schemas.
         $this->registerSchemas();
